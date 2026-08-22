@@ -12,6 +12,7 @@ function AppContent() {
   const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-signup', '/verify-login-otp'];
 
   const isAuthPage = authRoutes.includes(location.pathname);
+  const isAdminPage = location.pathname.startsWith('/admin');
 
   return (
     <>
