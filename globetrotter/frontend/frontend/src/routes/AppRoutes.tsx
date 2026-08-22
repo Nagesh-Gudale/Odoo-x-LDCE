@@ -16,6 +16,8 @@ import { Community } from '../pages/Community';
 import { CalendarPage } from '../pages/CalendarPage';
 import { Activities } from '../pages/Activities';
 import { ActivityDetails } from '../pages/ActivityDetails';
+import { Explore } from '../pages/Explore';
+import { About } from '../pages/About';
 
 // Admin Imports
 import { AdminLayout } from '../pages/admin/AdminLayout';
@@ -25,8 +27,6 @@ import { AdminTrips } from '../pages/admin/AdminTrips';
 import { AdminActivities } from '../pages/admin/AdminActivities';
 import { AdminDestinations } from '../pages/admin/AdminDestinations';
 import { AdminAnalytics } from '../pages/admin/AdminAnalytics';
-
-import { ExploreCitiesPlaceholder, AboutPlaceholder } from '../pages/Placeholders';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -48,10 +48,10 @@ export const AppRoutes: React.FC = () => {
       <Route path="/search/activities" element={<Activities />} />
       <Route path="/community" element={<Community />} />
       <Route path="/calendar" element={<CalendarPage />} />
-      <Route path="/explore" element={<ExploreCitiesPlaceholder />} />
-      <Route path="/search/cities" element={<ExploreCitiesPlaceholder />} />
+      <Route path="/explore" element={<Explore />} />
+      <Route path="/search/cities" element={<Explore />} />
       <Route path="/budget" element={<TripBudget />} />
-      <Route path="/about" element={<AboutPlaceholder />} />
+      <Route path="/about" element={<About />} />
 
       {/* Protected User Action Routes */}
       <Route 
