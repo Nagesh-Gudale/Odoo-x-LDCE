@@ -1,29 +1,69 @@
 :root {
-  --color-primary: #3155D9;
-  --color-primary-dark: #11152F;
-
+  /* Common Brand Colors */
   --color-sunset-orange: #FF8A3D;
-  --color-sunset-coral: #FF647C;
-  --color-sunset-pink: #F45FA2;
-  --color-sunset-purple: #7657E8;
-
+  --color-sunset-coral: #FF6B6B;
+  --color-sunset-pink: #FF5F9E;
+  --color-sunset-purple: #8B5CF6;
   --color-ocean: #4BA3E3;
 
   --color-success: #32B48A;
   --color-warning: #FFB547;
   --color-error: #E5484D;
 
-  --color-background: #FFF9F5;
-  --color-surface: #FFFFFF;
+  --gradient-sunset: linear-gradient(135deg, #FF8A3D, #FF6B6B, #FF5F9E, #8B5CF6);
+  --gradient-sunset-text: linear-gradient(135deg, #FF8A3D, #FF6B6B, #FF5F9E);
 
-  --color-text-primary: #171A35;
-  --color-text-secondary: #667085;
-
-  --color-border: #E8E5EA;
-
-  --gradient-sunset: linear-gradient(135deg, #FF8A3D, #FF647C, #7657E8);
-  --gradient-sunset-text: linear-gradient(135deg, #FF8A3D, #FF647C);
-
-  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   --font-mono: ui-monospace, Consolas, monospace;
+
+  /* Semantic Light Mode Color Variables */
+  --bg-primary: #FFF9F5;
+  --bg-secondary: #FFFFFF;
+  --surface: #FFFFFF;
+  --surface-elevated: #FFFFFF;
+  --text-primary: #10142F;
+  --text-secondary: #52617A;
+  --text-muted: #8E9BAE;
+  --border: #E8E5EA;
+
+  --nav-bg: #10142F;
+  --nav-text: rgba(255, 255, 255, 0.75);
+  --nav-text-active: #FF8A3D;
+  --hero-overlay: linear-gradient(90deg, rgba(16, 20, 47, 0.95) 0%, rgba(16, 20, 47, 0.8) 40%, rgba(16, 20, 47, 0.15) 75%, transparent 100%);
+  
+  --search-bg: #FFFFFF;
+  --search-text: #10142F;
+  --search-border: #E8E5EA;
+  --search-icon: #FF8A3D;
+  --search-label: #52617A;
+  
+  --shadow-color: rgba(16, 20, 47, 0.04);
+  --shadow: 0 10px 40px var(--shadow-color);
+}
+
+body.dark-theme {
+  /* Semantic Dark Mode Color Variables */
+  --bg-primary: #0A0D1A;
+  --bg-secondary: #10142F;
+  --surface: #10142F;
+  --surface-elevated: #171B3A;
+  --text-primary: #FFFFFF;
+  --text-secondary: #A0ABC0;
+  --text-muted: #64748B;
+  --border: rgba(255, 255, 255, 0.08);
+
+  --nav-bg: #0A0D1A;
+  --nav-text: rgba(255, 255, 255, 0.75);
+  --nav-text-active: #FF8A3D;
+  --hero-overlay: linear-gradient(90deg, rgba(10, 13, 26, 0.95) 0%, rgba(10, 13, 26, 0.85) 45%, rgba(10, 13, 26, 0.2) 75%, transparent 100%);
+
+  --search-bg: #10142F;
+  --search-text: #FFFFFF;
+  --search-border: rgba(255, 255, 255, 0.08);
+  --search-icon: #FF8A3D;
+  --search-label: rgba(255, 255, 255, 0.6);
+
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --shadow: 0 10px 40px var(--shadow-color);
 }

@@ -1,18 +1,56 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Map, Calendar, DollarSign, Users, Search, ArrowRight } from 'lucide-react';
-import { Button, StatCard, DestinationCard, Badge } from '../components/Common';
-import heroImg from '../assets/hero.png';
+import { useNavigate, Link } from 'react-router-dom';
+import { 
+  Map, 
+  Calendar, 
+  Wallet, 
+  Users, 
+  Search, 
+  ArrowRight, 
+  Star, 
+  Heart, 
+  ChevronRight, 
+  Plane,
+  MapPin
+} from 'lucide-react';
+import { Button, StatCard, Badge } from '../components/Common';
+
+// Import local images exactly
+import heroImage from "../assets/hero-santorini.jpg";
+import tokyoImage from "../assets/tokyo.jpg";
+import santoriniImage from "../assets/santorini.jpg";
+import baliImage from "../assets/bali.jpg";
+import dubaiImage from "../assets/dubai.jpg";
+
 import './Home.css';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'multi' | 'explore' | 'activities'>('multi');
+  const [likedDestinations, setLikedDestinations] = useState<{ [key: string]: boolean }>({});
+
+  const toggleLike = (city: string) => {
+    setLikedDestinations({
+      ...likedDestinations,
+      [city]: !likedDestinations[city]
+    });
+  };
 
   const popularDestinations = [
     {
-      imageUrl: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=600&q=80',
-      badge: 'Beaches',
+      id: 'tokyo',
+      imageUrl: tokyoImage,
+      badge: 'Trending',
+      city: 'Tokyo',
+      country: 'Japan',
+      category: 'Modern • Culture • Food',
+      cost: '₹1,20,000',
+      rating: 4.8,
+    },
+    {
+      id: 'santorini',
+      imageUrl: santoriniImage,
+      badge: 'Popular',
       city: 'Santorini',
       country: 'Greece',
       category: 'Beaches • Views • Relaxation',
@@ -20,187 +58,253 @@ export const Home: React.FC = () => {
       rating: 4.9,
     },
     {
-      imageUrl: 'https://images.unsplash.com/photo-1498503182468-3b51cbb6cb24?auto=format&fit=crop&w=600&q=80',
-      badge: 'Coastal',
-      city: 'Amalfi Coast',
-      country: 'Italy',
-      category: 'Coastal • Scenic • Luxury',
-      cost: '₹1,40,000',
-      rating: 4.8,
-    },
-    {
-      imageUrl: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80',
-      badge: 'Culture',
-      city: 'Kyoto',
-      country: 'Japan',
-      category: 'Culture • Temples • History',
-      cost: '₹95,000',
-      rating: 4.9,
-    },
-    {
-      imageUrl: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80',
-      badge: 'Romance',
-      city: 'Paris',
-      country: 'France',
-      category: 'Art • Romance • Food',
-      cost: '₹1,20,000',
+      id: 'bali',
+      imageUrl: baliImage,
+      badge: 'Hot',
+      city: 'Bali',
+      country: 'Indonesia',
+      category: 'Nature • Adventure • Culture',
+      cost: '₹80,000',
       rating: 4.7,
+    },
+    {
+      id: 'dubai',
+      imageUrl: dubaiImage,
+      badge: 'New',
+      city: 'Dubai',
+      country: 'UAE',
+      category: 'Luxury • Shopping • Adventure',
+      cost: '₹1,00,000',
+      rating: 4.6,
     },
   ];
 
   return (
-    <div className="home-page">
-      {/* Hero Section */}
-      <header className="hero-section">
-        <div className="container hero-grid">
-          <div className="hero-content">
-            <h1 className="hero-headline">
+    <div className="home-page-container">
+      {/* Cinematic Sunset Hero Section */}
+      <section className="hero-section-cinematic">
+        <div className="hero-background-wrapper">
+          <img src={heroImage} alt="Santorini Sunset" className="hero-bg-img" />
+          <div className="hero-gradient-overlay"></div>
+        </div>
+
+        <div className="container hero-content-wrapper">
+          <div className="hero-left-content">
+            <h1 className="hero-title-main animate-slide-up">
               Plan. Explore.<br />
               <span className="text-gradient">Experience More.</span>
             </h1>
-            <p className="hero-description">
-              Plan multi-city trips, discover amazing destinations, organize activities, manage your budget, and share your journey — all in one place.
+            <p className="hero-desc-subtitle animate-slide-up">
+              GlobeTrotter helps you plan multi-city trips, discover amazing places, manage expenses, and share unforgettable journeys.
             </p>
-            <div className="hero-ctas">
+            <div className="hero-buttons-wrapper animate-slide-up">
               <Button variant="sunset" onClick={() => navigate('/trips/create')}>
                 Plan Your Trip <ArrowRight size={16} style={{ marginLeft: '8px' }} />
               </Button>
-              <a href="#how-it-works" className="btn-learn-more">See How It Works</a>
-            </div>
-          </div>
-
-          <div className="hero-visual">
-            <div className="image-wrapper">
-              <img src={heroImg} alt="Travel Destinations Graphic" className="hero-img-main" />
-              <div className="floating-card route-card">
-                <span className="route-dot">📍 Rome</span>
-                <span className="route-line">✈</span>
-                <span className="route-dot">📍 Paris</span>
-                <span className="route-line">✈</span>
-                <span className="route-dot">📍 London</span>
-              </div>
+              <a href="#how-it-works" className="btn-play-video">
+                <span className="btn-play-symbol">▶</span> See How It Works
+              </a>
             </div>
           </div>
         </div>
-      </header>
 
-      {/* Trip Search Panel Section */}
-      <section className="search-section">
-        <div className="container">
-          <div className="search-panel shadow-medium">
+        {/* Dotted Airplane Flight Path Graphic */}
+        <div className="flight-path-container">
+          <svg className="flight-path-svg" viewBox="0 0 1440 200" fill="none">
+            <path 
+              id="airplane-flight-line"
+              d="M 50 150 Q 300 30 720 120 T 1390 100" 
+              stroke="rgba(255, 255, 255, 0.25)" 
+              strokeWidth="2" 
+              strokeDasharray="6 6"
+            />
+          </svg>
+          <div className="flight-airplane-symbol">✈</div>
+        </div>
+      </section>
+
+      {/* Separate Search Bar Section */}
+      <section className="trip-search-section">
+        <div className="trip-search-container container">
+          <div className="search-glassmorphism-card shadow-medium">
             <div className="search-tabs">
               <button 
                 className={`search-tab ${activeTab === 'multi' ? 'active' : ''}`}
                 onClick={() => setActiveTab('multi')}
               >
-                ✈ Multi-City Trip
+                <Plane size={16} />
+                <span>Multi-City Trip</span>
               </button>
               <button 
                 className={`search-tab ${activeTab === 'explore' ? 'active' : ''}`}
                 onClick={() => setActiveTab('explore')}
               >
-                📍 Explore Places
+                <MapPin size={16} />
+                <span>Explore Places</span>
               </button>
               <button 
                 className={`search-tab ${activeTab === 'activities' ? 'active' : ''}`}
                 onClick={() => setActiveTab('activities')}
               >
-                ★ Things to Do
+                <Star size={16} />
+                <span>Things to Do</span>
               </button>
             </div>
 
-            <div className="search-fields">
-              <div className="search-field">
-                <label>From</label>
-                <div className="field-input-wrapper">
-                  <input type="text" placeholder="Where do you start?" />
+            <div className="search-form">
+              <div className="search-input-field">
+                <div className="field-label-wrapper">
+                  <MapPin size={14} className="field-icon" />
+                  <label>From</label>
                 </div>
+                <input type="text" placeholder="Where do you start?" />
               </div>
-              <div className="search-field">
-                <label>To</label>
-                <div className="field-input-wrapper">
-                  <input type="text" placeholder="Add destination" />
+              
+              <div className="search-input-field">
+                <div className="field-label-wrapper">
+                  <MapPin size={14} className="field-icon" />
+                  <label>To</label>
                 </div>
+                <input type="text" placeholder="Add destination" />
               </div>
-              <div className="search-field">
-                <label>Dates</label>
-                <div className="field-input-wrapper">
-                  <input type="text" placeholder="Select dates" onFocus={(e) => e.target.type = 'date'} onBlur={(e) => e.target.type = 'text'} />
+
+              <div className="search-input-field">
+                <div className="field-label-wrapper">
+                  <Calendar size={14} className="field-icon" />
+                  <label>Dates</label>
                 </div>
+                <input 
+                  type="text" 
+                  placeholder="Select dates" 
+                  onFocus={(e) => e.target.type = 'date'} 
+                  onBlur={(e) => e.target.type = 'text'} 
+                />
               </div>
-              <div className="search-field">
-                <label>Travelers</label>
-                <div className="field-input-wrapper">
-                  <input type="text" placeholder="2 Travelers" />
+
+              <div className="search-input-field">
+                <div className="field-label-wrapper">
+                  <Users size={14} className="field-icon" />
+                  <label>Travelers</label>
                 </div>
+                <input type="text" placeholder="2 Travelers" />
               </div>
-              <button className="search-submit-btn" onClick={() => navigate('/search/cities')}>
+
+              <button className="search-action-btn" onClick={() => navigate('/search/cities')}>
                 <Search size={18} />
-                <span>Search</span>
+                <span>Search Trips</span>
               </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="features-section">
+      {/* Horizontal Feature Strip */}
+      <section className="feature-strip-section">
         <div className="container">
-          <div className="section-header">
-            <Badge text="Core Features" variant="coral" />
-            <h2>Designed for Modern Travelers</h2>
-            <p>Everything you need to craft the perfect multi-city journey without the planning stress.</p>
-          </div>
-
-          <div className="features-grid">
-            <div className="feature-card shadow-subtle">
-              <div className="feature-icon-wrapper icon-lavender">
-                <Map className="feature-icon" />
+          <div className="feature-strip-wrapper shadow-subtle">
+            <div className="strip-item">
+              <div className="strip-icon-circle bg-lavender">
+                <Map size={18} />
               </div>
-              <h3>Multi-City Planning</h3>
-              <p>Create, organize, and manage complex travel routes and stops with ease.</p>
+              <div className="strip-content">
+                <h4>Multi-City Planning</h4>
+                <p>Create, organize, and manage your multi-city itineraries with ease.</p>
+              </div>
             </div>
 
-            <div className="feature-card shadow-subtle">
-              <div className="feature-icon-wrapper icon-peach">
-                <DollarSign className="feature-icon" />
+            <div className="strip-item">
+              <div className="strip-icon-circle bg-peach">
+                <Wallet size={18} />
               </div>
-              <h3>Budget Friendly</h3>
-              <p>Estimate costs and monitor daily expenditures. Stay notified if you go over budget.</p>
+              <div className="strip-content">
+                <h4>Budget Friendly</h4>
+                <p>Estimate costs, track expenses, and stay within your budget.</p>
+              </div>
             </div>
 
-            <div className="feature-card shadow-subtle">
-              <div className="feature-icon-wrapper icon-pink">
-                <Calendar className="feature-icon" />
+            <div className="strip-item">
+              <div className="strip-icon-circle bg-pink">
+                <Calendar size={18} />
               </div>
-              <h3>Smart Itinerary</h3>
-              <p>Organize days and activities with timeline and schedule cards.</p>
+              <div className="strip-content">
+                <h4>Smart Itinerary</h4>
+                <p>Day-wise plans, calendar view, and timeline to keep your trip on track.</p>
+              </div>
             </div>
 
-            <div className="feature-card shadow-subtle">
-              <div className="feature-icon-wrapper icon-mint">
-                <Users className="feature-icon" />
+            <div className="strip-item">
+              <div className="strip-icon-circle bg-mint">
+                <Users size={18} />
               </div>
-              <h3>Share & Collaborate</h3>
-              <p>Invite friends to edit your plan, or share a read-only page with others.</p>
+              <div className="strip-content">
+                <h4>Share & Collaborate</h4>
+                <p>Share trips with friends or collaborate to plan together.</p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Popular Destinations Section */}
-      <section className="destinations-section">
+      <section className="popular-destinations-section">
         <div className="container">
-          <div className="section-header">
-            <Badge text="Inspiration" variant="pink" />
-            <h2>Popular Destinations</h2>
-            <p>Discover top-rated cities and construct routes utilizing custom estimation averages.</p>
+          <div className="destinations-section-header">
+            <div className="header-left">
+              <Badge text="Trending Inspiration" variant="pink" />
+              <h2>Popular Destinations</h2>
+              <p>Discover inspiring destinations and build your perfect route.</p>
+            </div>
+            <div className="header-right">
+              <Link to="/search/cities" className="btn-view-all-dest">
+                View All Destinations <ArrowRight size={16} />
+              </Link>
+            </div>
           </div>
 
-          <div className="destinations-grid">
-            {popularDestinations.map((dest, idx) => (
-              <DestinationCard key={idx} {...dest} />
-            ))}
+          <div className="destinations-carousel-wrapper">
+            <div className="destinations-grid-carousel">
+              {popularDestinations.map((dest) => (
+                <div key={dest.id} className="premium-dest-card">
+                  <div className="dest-card-image-box">
+                    <img src={dest.imageUrl} alt={`${dest.city}, ${dest.country}`} className="dest-card-img" />
+                    <div className="dest-card-gradient-overlay"></div>
+                    
+                    <span className="dest-badge-top-left">
+                      <Badge text={dest.badge} variant={dest.badge === 'Trending' ? 'orange' : dest.badge === 'Popular' ? 'purple' : dest.badge === 'Hot' ? 'coral' : 'success'} />
+                    </span>
+                    
+                    <button 
+                      className={`dest-heart-btn ${likedDestinations[dest.city] ? 'liked' : ''}`}
+                      onClick={() => toggleLike(dest.city)}
+                      aria-label="Like destination"
+                    >
+                      <Heart size={16} className="heart-icon-svg" />
+                    </button>
+
+                    <div className="dest-title-overlay">
+                      <h3>{dest.city}, {dest.country}</h3>
+                      <p className="dest-cat-text">{dest.category}</p>
+                    </div>
+                  </div>
+
+                  <div className="dest-card-details-box">
+                    <div className="dest-metric">
+                      <span className="metric-lbl">Estimated Cost</span>
+                      <span className="metric-val">{dest.cost}</span>
+                    </div>
+                    <div className="dest-rating-box">
+                      <Star size={14} className="star-icon-fill" />
+                      <span>{dest.rating.toFixed(1)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Carousel Right Arrow Control */}
+            <button className="carousel-control-btn right-arrow" onClick={() => navigate('/search/cities')} aria-label="Next destinations">
+              <ChevronRight size={24} />
+            </button>
           </div>
         </div>
       </section>
@@ -208,7 +312,7 @@ export const Home: React.FC = () => {
       {/* How It Works Section */}
       <section id="how-it-works" className="how-it-works-section">
         <div className="container">
-          <div className="section-header">
+          <div className="section-header-centered">
             <Badge text="Workflow" variant="purple" />
             <h2>How It Works</h2>
             <p>Six simple steps to transition from inspiration to your ultimate journey.</p>
