@@ -20,13 +20,28 @@ CREATE TABLE countries (
 
 -- ----- users ----------------------------------------------------------------
 CREATE TABLE users (
-    user_id        serial PRIMARY KEY,
-    email          text NOT NULL UNIQUE,
-    display_name   text NOT NULL,
-    password_hash  text NOT NULL,                          -- backend fills; schema is auth-agnostic
-    public_slug    text UNIQUE,                            -- unguessable share URL for profile
-    created_at     timestamptz NOT NULL DEFAULT now()
+    user_id           serial PRIMARY KEY,
+    email             text NOT NULL UNIQUE,
+    full_name         varchar(100),
+    password_hash     varchar(255) NOT NULL,
+    profile_image_url text,
+    public_slug       text UNIQUE,
+    is_active         boolean NOT NULL DEFAULT true,
+    created_at        timestamptz NOT NULL DEFAULT now(),
+    updated_at        timestamptz NOT NULL DEFAULT now()
 );
+
+-- updated_at auto-bump trigger
+CREATE OR REPLACE FUNCTION users_touch_updated_at() RETURNS trigger AS $$
+BEGIN
+    NEW.updated_at := now();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER users_touch_updated_at
+    BEFORE UPDATE ON users
+    FOR EACH ROW EXECUTE FUNCTION users_touch_updated_at();
 
 -- ----- user_preferences ------------------------------------------------------
 CREATE TABLE user_preferences (

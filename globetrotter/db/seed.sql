@@ -59,12 +59,12 @@ INSERT INTO categories (name, type) VALUES
 
 -- ----- users ----------------------------------------------------------------
 -- password_hash is a placeholder; backend will overwrite before real use.
-INSERT INTO users (email, display_name, password_hash, public_slug) VALUES
-    ('yasha@example.com',   'Yasha Patel',     '!seed!', 'yasha-ptl'),
-    ('mira@example.com',    'Mira Chen',       '!seed!', NULL),                -- intentionally NULL
-    ('leo@example.com',     'Leo Rossi',       '!seed!', 'leo-rs'),
-    ('sana@example.com',    'Sana Iqbal',      '!seed!', 'sana-iq'),
-    ('kenji@example.com',   'Kenji Watanabe',  '!seed!', NULL);
+INSERT INTO users (email, display_name, password_hash, public_slug, email_verified) VALUES
+    ('yasha@example.com',   'Yasha Patel',     '!seed!', 'yasha-ptl', true),
+    ('mira@example.com',    'Mira Chen',       '!seed!', NULL,       true),                -- intentionally NULL
+    ('leo@example.com',     'Leo Rossi',       '!seed!', 'leo-rs',    true),
+    ('sana@example.com',    'Sana Iqbal',      '!seed!', 'sana-iq',   true),
+    ('kenji@example.com',   'Kenji Watanabe',  '!seed!', NULL,       true);
 
 -- ----- user_preferences -----------------------------------------------------
 INSERT INTO user_preferences (user_id, theme, default_currency, default_trip_visibility, notification_opt_in) VALUES
