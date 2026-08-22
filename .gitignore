@@ -1,9 +1,9 @@
 .env
 
-globetrotter/backend/node_modules
+globetrotter/backend/node_modules/
 
 globetrotter/backend/.env
-globetrotter/frontend/node_modules
+globetrotter/frontend/node_modules/
 globetrotter/frontend/.env
 globetrotter/frontend/dist
 globetrotter/frontend/build
