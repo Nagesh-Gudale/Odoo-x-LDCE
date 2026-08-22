@@ -1,13 +1,9 @@
-.env
-.env.*
-node_modules/
-**/node_modules/
-dist/
-**/dist/
-build/
-**/build/
-*.log
-.DS_Store
-globetrotter/backend/.env
-globetrotter/frontend/.env
 
+globetrotter/frontend/dist
+globetrotter/frontend/build
+globetrotter/frontend/.next
+globetrotter/frontend/.cache
+globetrotter/frontend/.nuxt
+globetrotter/frontend/.output
+globetrotter/docs/
+globetrotter/frontend/frontend/README.md
