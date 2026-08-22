@@ -54,70 +54,112 @@ export const Navbar: React.FC = () => {
           <GlobeTrotterLogo size="md" showText={true} showTagline={true} />
         </Link>
 
-        {/* Desktop Nav Links */}
-        <div className="nav-menu">
-          {navLinks.map((link) => (
-            <NavLink
-              key={link.name}
-              to={link.path}
-              className={({ isActive }) => `nav-link ${isActive ? 'nav-link-active' : ''}`}
+        {/* Desktop Navigation Links & Actions */}
+        <div className="navbar-desktop">
+          <div className="navbar-links">
+            {navLinks.map((link) => (
+              <NavLink
+                key={link.name}
+                to={link.path}
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              >
+                {link.name}
+              </NavLink>
+            ))}
+          </div>
+
+          <div className="navbar-right">
+            <button
+              onClick={toggleTheme}
+              className="theme-toggle"
+              aria-label="Toggle Theme"
+              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
-              {link.name}
-            </NavLink>
-          ))}
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+
+            {isAuthenticated ? (
+              <div className="navbar-user-dropdown">
+                <Link to="/profile" className="btn-user-profile">
+                  <UserIcon size={16} />
+                  <span>{user?.name || 'Explorer'}</span>
+                </Link>
+                <button onClick={() => logout()} className="btn-logout" title="Logout">
+                  <LogOut size={16} />
+                </button>
+              </div>
+            ) : (
+              <div className="navbar-auth">
+                <Link to="/login" className="btn-login">
+                  Log In
+                </Link>
+                <Link to="/register" className="btn-signup">
+                  Sign Up
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Right Actions */}
-        <div className="nav-actions">
+        {/* Mobile Header Actions */}
+        <div className="mobile-right-actions">
           <button
             onClick={toggleTheme}
-            className="theme-toggle-btn"
+            className="theme-toggle mobile-theme-toggle"
             aria-label="Toggle Theme"
-            title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
-            {isDark ? <Sun className="theme-icon" /> : <Moon className="theme-icon" />}
+            {isDark ? <Sun size={20} /> : <Moon size={20} />}
           </button>
-
-          {isAuthenticated ? (
-            <div className="user-profile-menu">
-              <Link to="/profile" className="user-avatar-btn">
-                <UserIcon size={18} />
-                <span className="user-name">{user?.name || 'Explorer'}</span>
-              </Link>
-              <button onClick={() => logout()} className="logout-btn" title="Logout">
-                <LogOut size={16} />
-              </button>
-            </div>
-          ) : (
-            <div className="auth-buttons">
-              <Link to="/login" className="btn-login">
-                Log In
-              </Link>
-              <Link to="/register" className="btn-register btn-gradient-cta">
-                Sign Up
-              </Link>
-            </div>
-          )}
-
-          <button className="mobile-toggle" onClick={toggleMenu} aria-label="Toggle Navigation">
+          <button className="navbar-mobile-toggle" onClick={toggleMenu} aria-label="Toggle Navigation">
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Dropdown Menu */}
       {isOpen && (
-        <div className="mobile-menu shadow-medium">
-          {navLinks.map((link) => (
-            <NavLink
-              key={link.name}
-              to={link.path}
-              className={({ isActive }) => `mobile-nav-link ${isActive ? 'mobile-active' : ''}`}
-              onClick={() => setIsOpen(false)}
-            >
-              {link.name}
-            </NavLink>
-          ))}
+        <div className="navbar-mobile">
+          <div className="mobile-links">
+            {navLinks.map((link) => (
+              <NavLink
+                key={link.name}
+                to={link.path}
+                className={({ isActive }) => `mobile-link ${isActive ? 'active' : ''}`}
+                onClick={() => setIsOpen(false)}
+              >
+                {link.name}
+              </NavLink>
+            ))}
+
+            <div className="mobile-auth">
+              {isAuthenticated ? (
+                <>
+                  <Link to="/profile" className="mobile-link" onClick={() => setIsOpen(false)}>
+                    Profile ({user?.name || 'Explorer'})
+                  </Link>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setIsOpen(false);
+                    }}
+                    className="btn-login-mob"
+                    style={{ color: '#FF6B6B', borderColor: 'rgba(255,107,107,0.3)' }}
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" className="btn-login-mob" onClick={() => setIsOpen(false)}>
+                    Log In
+                  </Link>
+                  <Link to="/register" className="btn-signup-mob" onClick={() => setIsOpen(false)}>
+                    Sign Up
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </nav>
