@@ -8,11 +8,18 @@ import type { ItineraryItem, Trip } from '../data/tripData';
 import '../styles/Modules.css';
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June', 
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
 
 export const CalendarPage: React.FC = () => {
   const { trips, itineraryItems } = useTrip();
 
   const [currentView, setCurrentView] = useState<'Month' | 'Week' | 'Agenda'>('Month');
+  const [currentYear, setCurrentYear] = useState<number>(2026);
+  const [currentMonthIndex, setCurrentMonthIndex] = useState<number>(8); // 8 = September (0-indexed)
+
   const [selectedEvent, setSelectedEvent] = useState<{
     title: string;
     tripName: string;
@@ -23,6 +30,30 @@ export const CalendarPage: React.FC = () => {
     destination?: string;
     notes?: string;
   } | null>(null);
+
+  // Dynamic Month Switchers
+  const handlePrevMonth = () => {
+    if (currentMonthIndex === 0) {
+      setCurrentMonthIndex(11);
+      setCurrentYear((y) => y - 1);
+    } else {
+      setCurrentMonthIndex((m) => m - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (currentMonthIndex === 11) {
+      setCurrentMonthIndex(0);
+      setCurrentYear((y) => y + 1);
+    } else {
+      setCurrentMonthIndex((m) => m + 1);
+    }
+  };
+
+  const handleToday = () => {
+    setCurrentYear(2026);
+    setCurrentMonthIndex(8);
+  };
 
   // Derive all events dynamically from trips & itinerary items
   const calendarEvents: Array<{
@@ -67,13 +98,22 @@ export const CalendarPage: React.FC = () => {
     });
   });
 
-  // Calendar 30-day Grid for Sept 2026
-  const monthDays = Array.from({ length: 30 }).map((_, i) => {
+  // Calculate days in active month
+  const daysInMonth = new Date(currentYear, currentMonthIndex + 1, 0).getDate();
+  const firstDayOfWeek = new Date(currentYear, currentMonthIndex, 1).getDay();
+
+  // Calendar days grid
+  const monthDays = Array.from({ length: daysInMonth }).map((_, i) => {
     const dayNum = i + 1;
-    const dateStr = `2026-09-${dayNum < 10 ? '0' + dayNum : dayNum}`;
+    const monthStr = currentMonthIndex + 1 < 10 ? `0${currentMonthIndex + 1}` : `${currentMonthIndex + 1}`;
+    const dayStr = dayNum < 10 ? `0${dayNum}` : `${dayNum}`;
+    const dateStr = `${currentYear}-${monthStr}-${dayStr}`;
     const eventsOnDay = calendarEvents.filter((e) => e.date === dateStr);
     return { dayNum, dateStr, eventsOnDay };
   });
+
+  // Padding cells before day 1
+  const paddingCells = Array.from({ length: firstDayOfWeek }).map((_, i) => i);
 
   return (
     <div className="module-page-container">
@@ -91,15 +131,15 @@ export const CalendarPage: React.FC = () => {
 
         {/* Calendar Control Toolbar */}
         <div className="itinerary-header-card" style={{ padding: '1.25rem 2rem', marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', fontWeight: 800 }}>
-                September 2026
+                {MONTH_NAMES[currentMonthIndex]} {currentYear}
               </h2>
               <div style={{ display: 'flex', gap: '0.4rem' }}>
-                <button className="btn-outline-cta" style={{ padding: '0.4rem 0.6rem' }}><ChevronLeft size={16} /></button>
-                <button className="btn-outline-cta" style={{ padding: '0.4rem 0.6rem' }}><ChevronRight size={16} /></button>
-                <button className="btn-outline-cta" style={{ padding: '0.4rem 0.85rem', fontSize: '0.82rem' }}>Today</button>
+                <button onClick={handlePrevMonth} className="btn-outline-cta" style={{ padding: '0.4rem 0.6rem' }}><ChevronLeft size={16} /></button>
+                <button onClick={handleNextMonth} className="btn-outline-cta" style={{ padding: '0.4rem 0.6rem' }}><ChevronRight size={16} /></button>
+                <button onClick={handleToday} className="btn-outline-cta" style={{ padding: '0.4rem 0.85rem', fontSize: '0.82rem' }}>Today</button>
               </div>
             </div>
 
@@ -125,12 +165,16 @@ export const CalendarPage: React.FC = () => {
 
         {/* MONTH VIEW */}
         {currentView === 'Month' && (
-          <div className="calendar-grid-frame">
+          <div className="calendar-grid-frame shadow-medium">
             <div className="calendar-month-grid">
               {DAYS_OF_WEEK.map((day) => (
                 <div key={day} className="weekday-header">
                   {day}
                 </div>
+              ))}
+
+              {paddingCells.map((pad) => (
+                <div key={`pad-${pad}`} className="day-cell muted" style={{ opacity: 0.35, background: 'var(--bg-secondary)' }}></div>
               ))}
 
               {monthDays.map((cell) => (
@@ -194,10 +238,44 @@ export const CalendarPage: React.FC = () => {
         {/* WEEK VIEW */}
         {currentView === 'Week' && (
           <div className="expenses-table-card shadow-subtle">
-            <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', fontWeight: 800, marginBottom: '1rem' }}>
-              Week View — Sept 01 to Sept 07, 2026
+            <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', fontWeight: 800, marginBottom: '1.5rem' }}>
+              Weekly Hours Schedule ({MONTH_NAMES[currentMonthIndex]} 01 to 07, {currentYear})
             </h3>
-            <p style={{ color: 'var(--text-secondary)' }}>Displaying weekly hour timeline grid for active day scheduled events.</p>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem', overflowX: 'auto' }}>
+              {DAYS_OF_WEEK.map((day, idx) => {
+                const dayNum = idx + 1;
+                const monthStr = currentMonthIndex + 1 < 10 ? `0${currentMonthIndex + 1}` : `${currentMonthIndex + 1}`;
+                const dateStr = `${currentYear}-${monthStr}-0${dayNum}`;
+                const dayEvents = calendarEvents.filter(e => e.date === dateStr);
+
+                return (
+                  <div key={day} style={{ padding: '0.75rem', borderRadius: '12px', background: 'var(--bg-primary)', border: '1px solid var(--border)', minHeight: '180px' }}>
+                    <div style={{ fontWeight: 800, fontSize: '0.85rem', marginBottom: '0.5rem', color: 'var(--color-sunset-orange)' }}>
+                      {day} {dayNum}
+                    </div>
+                    {dayEvents.map(e => (
+                      <div
+                        key={e.id}
+                        onClick={() => setSelectedEvent(e)}
+                        style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          padding: '0.3rem 0.5rem',
+                          borderRadius: '6px',
+                          background: 'linear-gradient(135deg, #FF7A45, #FF4F9A)',
+                          color: '#fff',
+                          marginBottom: '0.35rem',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {e.title}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

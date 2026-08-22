@@ -23,13 +23,36 @@ export const Community: React.FC = () => {
   const [postDesc, setPostDesc] = useState('');
   const [postImage, setPostImage] = useState('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80');
 
-  const filteredPosts = communityPosts.filter((post: CommunityPost) => {
-    const matchesSearch = 
-      post.tripTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.userName.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
-  });
+  // Multi-level filtering & sorting
+  const filteredPosts = communityPosts
+    .filter((post: CommunityPost) => {
+      const matchesSearch = 
+        post.tripTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      if (!matchesSearch) return false;
+
+      if (activeCategory === 'All' || activeCategory === 'Popular' || activeCategory === 'Recent') {
+        return true;
+      }
+      if (activeCategory === 'Trending') {
+        return post.likes >= 100;
+      }
+      // Category tag matching
+      const categoryKeyword = activeCategory.toLowerCase().replace('travel', '').trim();
+      return (
+        post.tags.some(t => t.toLowerCase().includes(categoryKeyword)) ||
+        post.description.toLowerCase().includes(categoryKeyword) ||
+        post.tripTitle.toLowerCase().includes(categoryKeyword)
+      );
+    })
+    .sort((a, b) => {
+      if (activeCategory === 'Popular') return b.likes - a.likes;
+      if (activeCategory === 'Recent') return b.id.localeCompare(a.id);
+      return 0;
+    });
 
   const handleCreatePost = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +67,7 @@ export const Community: React.FC = () => {
       tripTitle: postTitle,
       image: postImage,
       description: postDesc,
-      tags: ['Travel', 'Adventure', 'GlobeTrotter'],
+      tags: ['Travel', 'Adventure', 'GlobeTrotter', activeCategory !== 'All' ? activeCategory.replace(' ', '') : 'Explorer'],
     });
 
     setPostTitle('');
@@ -115,105 +138,119 @@ export const Community: React.FC = () => {
         <div className="community-grid-layout">
           {/* Main Social Feed */}
           <div>
-            {filteredPosts.map((post: CommunityPost) => (
-              <div key={post.id} className="post-card">
-                {/* User Header */}
-                <div className="post-header-user">
-                  <div className="user-info-group">
-                    <img src={post.userAvatar} alt={post.userName} className="user-avatar-img" />
-                    <div>
-                      <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800 }}>
-                        {post.userName}
-                      </h4>
-                      <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                        <MapPin size={12} /> {post.userLocation} • {post.date}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="category-pill">{post.tripTitle}</span>
-                </div>
-
-                {/* Post Image */}
-                <div className="post-image-box">
-                  <img src={post.image} alt={post.tripTitle} className="post-img" />
-                </div>
-
-                {/* Post Body */}
-                <div className="post-body-content">
-                  <p style={{ fontSize: '1rem', lineHeight: '1.6', marginBottom: '1rem', color: 'var(--text-primary)' }}>
-                    {post.description}
-                  </p>
-
-                  {/* Tags */}
-                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>
-                    {post.tags.map((tag: string) => (
-                      <span key={tag} style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-sunset-orange)' }}>
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="post-actions-row">
-                    <button
-                      onClick={() => toggleLikePost(post.id)}
-                      className={`btn-post-action ${post.isLiked ? 'liked' : ''}`}
-                    >
-                      <Heart size={18} fill={post.isLiked ? '#FF4F9A' : 'none'} />
-                      <span>{post.likes} Likes</span>
-                    </button>
-
-                    <button className="btn-post-action">
-                      <MessageSquare size={18} />
-                      <span>{post.comments.length} Comments</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(window.location.href);
-                        alert('Post link copied!');
-                      }}
-                      className="btn-post-action"
-                      style={{ marginLeft: 'auto' }}
-                    >
-                      <Share2 size={18} />
-                      <span>Share</span>
-                    </button>
-                  </div>
-
-                  {/* Comments Drawer */}
-                  <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
-                    {post.comments.map((c: PostComment) => (
-                      <div key={c.id} style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                        <img src={c.userAvatar} alt={c.userName} style={{ width: '28px', height: '28px', borderRadius: '50%' }} />
-                        <div style={{ background: 'var(--bg-primary)', padding: '0.5rem 0.85rem', borderRadius: '12px', flex: 1 }}>
-                          <span style={{ fontWeight: 800, fontSize: '0.82rem' }}>{c.userName}: </span>
-                          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{c.text}</span>
-                        </div>
+            {filteredPosts.length === 0 ? (
+              <div className="empty-activities-card shadow-subtle" style={{ textAlign: 'center', padding: '3rem 1.5rem' }}>
+                <Users size={40} style={{ color: 'var(--color-sunset-orange)', marginBottom: '1rem' }} />
+                <h3>No Posts Found in "{activeCategory}"</h3>
+                <p style={{ color: 'var(--text-secondary)' }}>Be the first traveler to share a story in this category!</p>
+                <button onClick={() => setIsCreateModalOpen(true)} className="btn-gradient-cta" style={{ marginTop: '1rem' }}>
+                  <Plus size={16} /> Share Your Story
+                </button>
+              </div>
+            ) : (
+              filteredPosts.map((post: CommunityPost) => (
+                <div key={post.id} className="post-card">
+                  {/* User Header */}
+                  <div className="post-header-user">
+                    <div className="user-info-group">
+                      <img src={post.userAvatar} alt={post.userName} className="user-avatar-img" />
+                      <div>
+                        <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800 }}>
+                          {post.userName}
+                        </h4>
+                        <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                          <MapPin size={12} /> {post.userLocation} • {post.date}
+                        </span>
                       </div>
-                    ))}
+                    </div>
+                    <span className="category-pill">{post.tripTitle}</span>
+                  </div>
 
-                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-                      <input
-                        type="text"
-                        value={commentText[post.id] || ''}
-                        onChange={(e) => setCommentText({ ...commentText, [post.id]: e.target.value })}
-                        className="modal-input-control"
-                        placeholder="Write a comment..."
-                        style={{ height: '38px', fontSize: '0.85rem' }}
-                      />
+                  {/* Post Image */}
+                  <div className="post-image-box">
+                    <img src={post.image} alt={post.tripTitle} className="post-img" />
+                  </div>
+
+                  {/* Post Body */}
+                  <div className="post-body-content">
+                    <p style={{ fontSize: '1rem', lineHeight: '1.6', marginBottom: '1rem', color: 'var(--text-primary)' }}>
+                      {post.description}
+                    </p>
+
+                    {/* Tags */}
+                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                      {post.tags.map((tag: string) => (
+                        <span key={tag} style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-sunset-orange)' }}>
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="post-actions-row">
                       <button
-                        onClick={() => handleAddComment(post.id)}
-                        className="btn-gradient-cta"
-                        style={{ height: '38px', padding: '0 1rem', fontSize: '0.82rem' }}
+                        onClick={() => toggleLikePost(post.id)}
+                        className={`btn-post-action ${post.isLiked ? 'liked' : ''}`}
                       >
-                        Post
+                        <Heart size={18} fill={post.isLiked ? '#FF4F9A' : 'none'} color={post.isLiked ? '#FF4F9A' : 'currentColor'} />
+                        <span>{post.likes} Likes</span>
+                      </button>
+
+                      <button className="btn-post-action">
+                        <MessageSquare size={18} />
+                        <span>{post.comments.length} Comments</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(window.location.href);
+                          alert('Post link copied!');
+                        }}
+                        className="btn-post-action"
+                        style={{ marginLeft: 'auto' }}
+                      >
+                        <Share2 size={18} />
+                        <span>Share</span>
                       </button>
                     </div>
+
+                    {/* Comments Drawer */}
+                    <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+                      {post.comments.map((c: PostComment) => (
+                        <div key={c.id} style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                          <img src={c.userAvatar} alt={c.userName} style={{ width: '28px', height: '28px', borderRadius: '50%' }} />
+                          <div style={{ background: 'var(--bg-primary)', padding: '0.5rem 0.85rem', borderRadius: '12px', flex: 1 }}>
+                            <span style={{ fontWeight: 800, fontSize: '0.82rem' }}>{c.userName}: </span>
+                            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{c.text}</span>
+                          </div>
+                        </div>
+                      ))}
+
+                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                        <input
+                          type="text"
+                          value={commentText[post.id] || ''}
+                          onChange={(e) => setCommentText({ ...commentText, [post.id]: e.target.value })}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleAddComment(post.id);
+                          }}
+                          className="modal-input-control"
+                          placeholder="Write a comment..."
+                          style={{ height: '38px', fontSize: '0.85rem' }}
+                        />
+                        <button
+                          onClick={() => handleAddComment(post.id)}
+                          className="btn-gradient-cta"
+                          style={{ height: '38px', padding: '0 1rem', fontSize: '0.82rem' }}
+                        >
+                          Post
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
           {/* Sidebar */}

@@ -41,13 +41,16 @@ export const AppRoutes: React.FC = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
 
-      {/* Public Trips, Activities, and Community Discovery */}
+      {/* Public Trips, Activities, Explore & Community Discovery */}
       <Route path="/trips" element={<Trips />} />
       <Route path="/activities" element={<Activities />} />
       <Route path="/activities/:id" element={<ActivityDetails />} />
       <Route path="/search/activities" element={<Activities />} />
       <Route path="/community" element={<Community />} />
+      <Route path="/calendar" element={<CalendarPage />} />
+      <Route path="/explore" element={<ExploreCitiesPlaceholder />} />
       <Route path="/search/cities" element={<ExploreCitiesPlaceholder />} />
+      <Route path="/budget" element={<TripBudget />} />
       <Route path="/about" element={<AboutPlaceholder />} />
 
       {/* Protected User Action Routes */}
@@ -91,14 +94,6 @@ export const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         } 
       />
-      <Route 
-        path="/calendar" 
-        element={
-          <ProtectedRoute>
-            <CalendarPage />
-          </ProtectedRoute>
-        } 
-      />
 
       {/* Protected Admin Portal Console */}
       <Route 
@@ -110,11 +105,13 @@ export const AppRoutes: React.FC = () => {
         }
       >
         <Route index element={<AdminDashboard />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="trips" element={<AdminTrips />} />
         <Route path="activities" element={<AdminActivities />} />
         <Route path="destinations" element={<AdminDestinations />} />
         <Route path="analytics" element={<AdminAnalytics />} />
+        <Route path="reports" element={<AdminAnalytics />} />
       </Route>
 
       {/* Fallback to Home */}
