@@ -1,0 +1,220 @@
+import type { DestinationSuggestion, ActivitySuggestion, ItinerarySection } from '../types/trip';
+
+export const POPULAR_DESTINATIONS: DestinationSuggestion[] = [
+  {
+    id: 'dest-santorini',
+    title: 'Santorini Sunset Caldera',
+    city: 'Santorini',
+    country: 'Greece',
+    category: 'Beaches',
+    estimatedCost: 110000,
+    currency: '₹',
+    rating: 4.9,
+    reviewCount: 1420,
+    imageUrl: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=1200&q=80',
+    description: 'Iconic white-washed clifftop villages, deep cobalt waters, and legendary golden hour sunsets over the Aegean sea.',
+    highlights: ['Oia Sunset Walk', 'Caldera Boat Tour', 'Akrotiri Ruins', 'Red Beach'],
+    recommendedDuration: '4 - 6 Days'
+  },
+  {
+    id: 'dest-amalfi',
+    title: 'Amalfi Coastline & Cliffside Gems',
+    city: 'Amalfi Coast',
+    country: 'Italy',
+    category: 'Sightseeing',
+    estimatedCost: 145000,
+    currency: '₹',
+    rating: 4.9,
+    reviewCount: 980,
+    imageUrl: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1200&q=80',
+    description: 'Dramatic vertical landscapes, pastel-colored villas cascading down sheer cliffs, and picturesque Mediterranean coves.',
+    highlights: ['Positano Vista', 'Ravello Gardens', 'Capri Day Trip', 'Limoncello Tastings'],
+    recommendedDuration: '5 - 7 Days'
+  },
+  {
+    id: 'dest-bali',
+    title: 'Bali Tropical Haven & Temples',
+    city: 'Bali',
+    country: 'Indonesia',
+    category: 'Relaxation',
+    estimatedCost: 75000,
+    currency: '₹',
+    rating: 4.8,
+    reviewCount: 2310,
+    imageUrl: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=80',
+    description: 'Emerald rice terraces, spiritual water temples, serene beach retreats, and vibrant artisan coastal villages.',
+    highlights: ['Uluwatu Sunset Temple', 'Tegallalang Terraces', 'Seminyak Coast', 'Nusa Penida'],
+    recommendedDuration: '6 - 8 Days'
+  },
+  {
+    id: 'dest-swiss-alps',
+    title: 'Swiss Alps Mountain Peaks',
+    city: 'Swiss Alps',
+    country: 'Switzerland',
+    category: 'Adventure',
+    estimatedCost: 180000,
+    currency: '₹',
+    rating: 4.9,
+    reviewCount: 1150,
+    imageUrl: 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1200&q=80',
+    description: 'Towering snow-capped Alpine peaks, pristine glacial lakes, scenic cogwheel trains, and charming mountain chalets.',
+    highlights: ['Jungfraujoch Peak', 'Matterhorn Viewpoint', 'Lake Lucerne Cruise', 'Grindelwald Trails'],
+    recommendedDuration: '5 - 8 Days'
+  },
+  {
+    id: 'dest-paris',
+    title: 'Paris Twilight Romance',
+    city: 'Paris',
+    country: 'France',
+    category: 'Food & Culture',
+    estimatedCost: 135000,
+    currency: '₹',
+    rating: 4.8,
+    reviewCount: 3100,
+    imageUrl: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80',
+    description: 'Boulevards glowing under twilight lanterns, world-class art collections, Seine river cruises, and exquisite cuisine.',
+    highlights: ['Louvre Evening Tour', 'Montmartre Artists', 'Seine Sunset Cruise', 'Eiffel Illumination'],
+    recommendedDuration: '4 - 5 Days'
+  },
+  {
+    id: 'dest-dubai',
+    title: 'Dubai Skyline & Desert Safari',
+    city: 'Dubai',
+    country: 'United Arab Emirates',
+    category: 'Luxury',
+    estimatedCost: 95000,
+    currency: '₹',
+    rating: 4.7,
+    reviewCount: 1890,
+    imageUrl: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80',
+    description: 'Ultra-modern architectural wonders, golden sand dunes at twilight, luxury seaside dining, and dynamic nightlife.',
+    highlights: ['Burj Khalifa Skydeck', 'Sunset Desert Safari', 'Dubai Marina Walk', 'Palm Jumeirah'],
+    recommendedDuration: '4 - 6 Days'
+  }
+];
+
+export const ACTIVITY_SUGGESTIONS: ActivitySuggestion[] = [
+  {
+    id: 'act-1',
+    title: 'Sunset Catamaran Cruise with Dinner',
+    destination: 'Santorini, Greece',
+    category: 'Sightseeing',
+    cost: 14500,
+    duration: '5 hours',
+    rating: 4.9,
+    imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
+    description: 'Sail through the volcano caldera, swim in thermal hot springs, and enjoy a Greek BBQ buffet as the sun dips below the horizon.',
+    tag: 'Top Rated'
+  },
+  {
+    id: 'act-2',
+    title: 'Oia to Fira Clifftop Trekking Route',
+    destination: 'Santorini, Greece',
+    category: 'Adventure',
+    cost: 3200,
+    duration: '3.5 hours',
+    rating: 4.8,
+    imageUrl: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=800&q=80',
+    description: 'A breathtaking 10km pedestrian trail along the volcanic rim offering panoramic sea vistas and hidden cliffside chapels.',
+    tag: 'Scenic Trail'
+  },
+  {
+    id: 'act-3',
+    title: 'Volcanic Vineyard Wine Tasting & Tapas',
+    destination: 'Santorini, Greece',
+    category: 'Food & Culture',
+    cost: 8500,
+    duration: '3 hours',
+    rating: 4.9,
+    imageUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80',
+    description: 'Sample crisp Assyrtiko and sweet Vinsanto wines grown on centuries-old volcanic soil paired with Aegean cheeses.',
+    tag: 'Culinary Pick'
+  },
+  {
+    id: 'act-4',
+    title: 'Perissa Black Sand Beach Day & Cabana',
+    destination: 'Santorini, Greece',
+    category: 'Beaches',
+    cost: 4500,
+    duration: 'Full Day',
+    rating: 4.7,
+    imageUrl: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=800&q=80',
+    description: 'Relax on volcanic black sands under shaded cabanas with crystal clear waters and beachside seafood tavernas.',
+    tag: 'Relaxation'
+  },
+  {
+    id: 'act-5',
+    title: 'Traditional Cliffside Cave Suite Stay',
+    destination: 'Santorini, Greece',
+    category: 'Relaxation',
+    cost: 38000,
+    duration: 'Overnight',
+    rating: 4.9,
+    imageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80',
+    description: 'Experience luxury carved into volcanic cliffs with a private heated infinity jacuzzi overlooking the Aegean twilight.',
+    tag: 'Luxury Stay'
+  },
+  {
+    id: 'act-6',
+    title: 'Akrotiri Prehistoric City Guided Tour',
+    destination: 'Santorini, Greece',
+    category: 'Sightseeing',
+    cost: 4200,
+    duration: '2.5 hours',
+    rating: 4.8,
+    imageUrl: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80',
+    description: 'Discover the "Minoan Pompeii", remarkably preserved under volcanic ash since the 16th century BC.',
+    tag: 'History'
+  }
+];
+
+export const INITIAL_ITINERARY_SECTIONS: ItinerarySection[] = [
+  {
+    id: 'sec-1',
+    sectionNumber: 1,
+    title: 'Section 1: Arrival, Transfers & Sunset Welcome Dinner',
+    category: 'Travel',
+    description: 'Arrival at Santorini Airport (JTR), luxury chauffeured transfer to Oia cliffside suite, and an exclusive sunset welcome dinner with Mediterranean seafood.',
+    startDate: '2026-09-10',
+    endDate: '2026-09-11',
+    dateRange: 'Sep 10, 2026 to Sep 11, 2026',
+    budget: 32000,
+    currency: '₹',
+    location: 'Oia, Santorini',
+    activities: ['Airport Private Transfer', 'Check-in at Cave Suite', 'Sunset Dinner at Oia Taverna'],
+    notes: 'Confirm flight details with local transfer coordinator 24 hours prior.',
+    status: 'confirmed'
+  },
+  {
+    id: 'sec-2',
+    sectionNumber: 2,
+    title: 'Section 2: Caldera Sailing Cruise & Volcanic Hot Springs',
+    category: 'Activity',
+    description: 'Half-day private catamaran sailing around the volcano, snorkeling in warm geothermal sulfur springs, and Aegean barbecue onboard at golden hour.',
+    startDate: '2026-09-12',
+    endDate: '2026-09-13',
+    dateRange: 'Sep 12, 2026 to Sep 13, 2026',
+    budget: 28000,
+    currency: '₹',
+    location: 'Caldera Basin, Santorini',
+    activities: ['Catamaran Sailing Tour', 'Hot Spring Snorkeling', 'Golden Hour Photo Session'],
+    notes: 'Bring sunscreen, swimwear, and a light windbreaker for the evening sail.',
+    status: 'planned'
+  },
+  {
+    id: 'sec-3',
+    sectionNumber: 3,
+    title: 'Section 3: Clifftop Trekking, Wine Tasting & Beach Day',
+    category: 'Sightseeing',
+    description: 'Morning trek along the scenic Fira-Oia rim trail followed by afternoon volcanic wine cellar tours and relaxation at Perissa black sand beach.',
+    startDate: '2026-09-14',
+    endDate: '2026-09-15',
+    dateRange: 'Sep 14, 2026 to Sep 15, 2026',
+    budget: 22000,
+    currency: '₹',
+    location: 'Fira & Perissa Beach, Santorini',
+    activities: ['Rim Trail Hike', 'Assyrtiko Wine Tasting', 'Perissa Beach Lounge'],
+    notes: 'Reserve beach loungers in advance for front-row view.',
+    status: 'planned'
+  }
+];
