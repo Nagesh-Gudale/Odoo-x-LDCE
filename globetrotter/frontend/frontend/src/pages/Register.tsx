@@ -108,8 +108,7 @@ export const Register: React.FC = () => {
 
     try {
       await register(name, email, password);
-      const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/home';
-      navigate(from, { replace: true });
+      navigate('/verify-signup', { state: { email } });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to create account. Please try again.';
       setFormError(message);

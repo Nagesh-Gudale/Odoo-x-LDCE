@@ -20,6 +20,7 @@ export const env = {
   JWT_SECRET: optional("JWT_SECRET", "globetrotter_jwt_secret_key_2026"),
   JWT_EXPIRES_IN: intEnv("JWT_EXPIRES_IN", 86400),
   BCRYPT_ROUNDS: intEnv("BCRYPT_ROUNDS", 10),
+  FRONTEND_ORIGIN: process.env["FRONTEND_ORIGIN"] ?? "http://localhost:5173",
 
   // OTP / Gmail SMTP
   GMAIL_USER: optional("GMAIL_USER", "admin@globetrotter.com"),

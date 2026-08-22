@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Home } from '../pages/Home';
 import { Login } from '../pages/Login';
 import { Register } from '../pages/Register';
+import { VerifySignup } from '../pages/VerifySignup';
+import { VerifyLoginOtp } from '../pages/VerifyLoginOtp';
 import { ForgotPassword } from '../pages/auth/ForgotPassword';
 import { ResetPassword } from '../pages/auth/ResetPassword';
 import { ProtectedRoute } from '../components/auth/ProtectedRoute';
@@ -38,6 +40,8 @@ export const AppRoutes: React.FC = () => {
       <Route path="/home" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/verify-signup" element={<VerifySignup />} />
+      <Route path="/verify-login-otp" element={<VerifyLoginOtp />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
 

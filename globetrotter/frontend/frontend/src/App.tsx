@@ -8,8 +8,12 @@ import './App.css';
 
 function AppContent() {
   const location = useLocation();
+<<<<<<< Updated upstream
   const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password'];
   const isAdminPage = location.pathname.startsWith('/admin');
+=======
+  const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-signup', '/verify-login-otp'];
+>>>>>>> Stashed changes
   const isAuthPage = authRoutes.includes(location.pathname);
 
   return (

@@ -77,8 +77,7 @@ export const Login: React.FC = () => {
 
     try {
       await login(email, password, rememberMe);
-      const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/home';
-      navigate(from, { replace: true });
+      navigate('/verify-login-otp', { state: { email } });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Invalid credentials. Please try again.';
       setFormError(message);
