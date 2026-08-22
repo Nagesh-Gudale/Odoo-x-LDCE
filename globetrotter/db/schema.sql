@@ -1,116 +1,184 @@
 -- =============================================================================
--- GlobeTrotter — foundational Postgres schema (hackathon MVP)
--- Single-file DDL. Run order: users → cities → activities → trips → stops →
--- stop_activities. Drop into a fresh DB; no migrations tool assumed yet.
+-- GlobeTrotter — foundational Postgres schema (hackathon MVP, current)
+-- Single-file DDL. Applied by docker-compose entrypoint on first DB boot.
+-- Apply order: countries → users → user_preferences → password_reset →
+-- categories → cities → saved_cities → activities → trips → trip_shares →
+-- trip_stops → trip_days → itinerary_items → expenses.
 -- =============================================================================
 
 BEGIN;
 
--- ----- Extensions ------------------------------------------------------------
-CREATE EXTENSION IF NOT EXISTS pgcrypto;   -- gen_random_uuid()
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- ----- Enums -----------------------------------------------------------------
--- Kept inline (CHECK) rather than CREATE TYPE so a future migration can ALTER
--- without ceremony. Hackathon speed > strict typing.
+-- ----- countries (referenced by cities) --------------------------------------
+CREATE TABLE countries (
+    country_id  serial PRIMARY KEY,
+    name        text NOT NULL UNIQUE,
+    iso_code    char(2) UNIQUE,
+    created_at  timestamptz NOT NULL DEFAULT now()
+);
 
--- ----- users -----------------------------------------------------------------
+-- ----- users ----------------------------------------------------------------
 CREATE TABLE users (
-    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    email           text NOT NULL UNIQUE,
-    display_name    text NOT NULL,
-    password_hash   text NOT NULL,           -- backend fills this; schema stays auth-agnostic
-    created_at      timestamptz NOT NULL DEFAULT now()
+    user_id        serial PRIMARY KEY,
+    email          text NOT NULL UNIQUE,
+    display_name   text NOT NULL,
+    password_hash  text NOT NULL,                          -- backend fills; schema is auth-agnostic
+    public_slug    text UNIQUE,                            -- unguessable share URL for profile
+    created_at     timestamptz NOT NULL DEFAULT now()
 );
 
--- ----- cities (reference / lookup) -------------------------------------------
--- Separate table (not embedded in stops) so we can dedupe, attach cost_index +
--- popularity once, and join cheaply. Activities live in one place per city.
+-- ----- user_preferences ------------------------------------------------------
+CREATE TABLE user_preferences (
+    preference_id           serial PRIMARY KEY,
+    user_id                 integer NOT NULL UNIQUE REFERENCES users(user_id) ON DELETE CASCADE,
+    theme                   text NOT NULL DEFAULT 'system',
+    default_currency        char(3) NOT NULL DEFAULT 'USD',
+    default_trip_visibility text NOT NULL DEFAULT 'private'
+                             CHECK (default_trip_visibility IN ('private','shared','public')),
+    notification_opt_in     boolean NOT NULL DEFAULT true,
+    created_at              timestamptz NOT NULL DEFAULT now(),
+    updated_at              timestamptz NOT NULL DEFAULT now()
+);
+
+-- ----- password_reset -------------------------------------------------------
+CREATE TABLE password_reset (
+    password_reset_id   serial PRIMARY KEY,
+    user_id             integer NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    token_hash          text NOT NULL,
+    expires_at          timestamptz NOT NULL,
+    used_at             timestamptz,
+    created_at          timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX password_reset_by_user ON password_reset (user_id);
+
+-- ----- categories (merged; replaces activity_categories + expense_categories) -
+CREATE TABLE categories (
+    category_id serial PRIMARY KEY,
+    name        text NOT NULL,
+    type        text NOT NULL CHECK (type IN ('expense','activity')),
+    created_at  timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (name, type)
+);
+
+-- ----- cities ---------------------------------------------------------------
 CREATE TABLE cities (
-    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    name            text NOT NULL,
-    country         text NOT NULL,
-    cost_index      numeric(6,2) NOT NULL DEFAULT 1.00,   -- multiplier vs baseline; e.g. 1.25
-    popularity      integer NOT NULL DEFAULT 0,           -- 0..100; ranking/sort only
-    created_at      timestamptz NOT NULL DEFAULT now(),
-    UNIQUE (name, country)
+    city_id     serial PRIMARY KEY,
+    country_id  integer NOT NULL REFERENCES countries(country_id) ON DELETE RESTRICT,
+    name        text NOT NULL,
+    cost_index  numeric(6,2) NOT NULL DEFAULT 1.00,
+    popularity  integer NOT NULL DEFAULT 0,
+    created_at  timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (country_id, name)
 );
+CREATE INDEX cities_by_country ON cities (country_id);
 
--- ----- activities (catalog, scoped to a city) --------------------------------
--- Living in their own table (per-city) lets us list "what's there to do" without
--- fanning out across stops; cost/duration are NUMERIC so budget math is exact.
-CREATE TABLE activities (
-    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    city_id         uuid NOT NULL REFERENCES cities(id) ON DELETE CASCADE,
-    name            text NOT NULL,
-    category        text NOT NULL,                          -- food / sights / nature / ...
-    cost            numeric(10,2) NOT NULL DEFAULT 0,       -- per-person, in trip currency
-    duration_mins   integer NOT NULL DEFAULT 60 CHECK (duration_mins >= 0),
+-- ----- saved_cities ---------------------------------------------------------
+CREATE TABLE saved_cities (
+    saved_city_id   serial PRIMARY KEY,
+    user_id         integer NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    city_id         integer NOT NULL REFERENCES cities(city_id) ON DELETE CASCADE,
     created_at      timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (user_id, city_id)
+);
+CREATE INDEX saved_cities_by_user ON saved_cities (user_id);
+
+-- ----- activities -----------------------------------------------------------
+CREATE TABLE activities (
+    activity_id    serial PRIMARY KEY,
+    city_id        integer NOT NULL REFERENCES cities(city_id)        ON DELETE CASCADE,
+    category_id    integer          REFERENCES categories(category_id) ON DELETE SET NULL,
+    name           text NOT NULL,
+    cost           numeric(10,2) NOT NULL DEFAULT 0,
+    duration_mins  integer NOT NULL DEFAULT 60 CHECK (duration_mins >= 0),
+    created_at     timestamptz NOT NULL DEFAULT now(),
     UNIQUE (city_id, name)
 );
 CREATE INDEX activities_by_city ON activities (city_id);
 
--- ----- trips -----------------------------------------------------------------
+-- ----- trips ----------------------------------------------------------------
 CREATE TABLE trips (
-    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    owner_id        uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    name            text NOT NULL,
-    description     text,
-    start_date      date NOT NULL,
-    end_date        date NOT NULL,
-    is_public       boolean NOT NULL DEFAULT false,         -- see rationale: sharing model
-    created_at      timestamptz NOT NULL DEFAULT now(),
+    trip_id      serial PRIMARY KEY,
+    owner_id     integer NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    name         text NOT NULL,
+    description  text,
+    start_date   date NOT NULL,
+    end_date     date NOT NULL,
+    is_public    boolean NOT NULL DEFAULT false,
+    public_slug  text UNIQUE,                          -- unguessable share URL
+    created_at   timestamptz NOT NULL DEFAULT now(),
     CHECK (end_date >= start_date)
 );
 CREATE INDEX trips_by_owner ON trips (owner_id);
 
--- ----- trip_collaborators (sharing, kept minimal) ----------------------------
--- Owner is on `trips.owner_id`; collaborators are a separate row each. Supports
--- the "shared trip" mention without inventing a full RBAC model.
-CREATE TABLE trip_collaborators (
-    trip_id         uuid NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
-    user_id         uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    role            text NOT NULL DEFAULT 'editor'
-                    CHECK (role IN ('viewer', 'editor')),
-    added_at        timestamptz NOT NULL DEFAULT now(),
-    PRIMARY KEY (trip_id, user_id)
+-- ----- trip_shares ----------------------------------------------------------
+CREATE TABLE trip_shares (
+    trip_share_id  serial PRIMARY KEY,
+    trip_id        integer NOT NULL REFERENCES trips(trip_id) ON DELETE CASCADE,
+    user_id        integer NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    role           text NOT NULL DEFAULT 'editor'
+                    CHECK (role IN ('viewer','editor')),
+    created_at     timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (trip_id, user_id)
 );
-CREATE INDEX trip_collabs_by_user ON trip_collaborators (user_id);
+CREATE INDEX trip_shares_by_user ON trip_shares (user_id);
 
--- ----- stops (a city visited during a trip, in order) ------------------------
--- One row per (trip, city). `seq` preserves ordering; `position`-only would lose
--- stable sort across equal values.
-CREATE TABLE stops (
-    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    trip_id         uuid NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
-    city_id         uuid NOT NULL REFERENCES cities(id) ON DELETE RESTRICT,
-    start_date      date NOT NULL,
-    end_date        date NOT NULL,
-    seq             integer NOT NULL,                       -- 0-based order within trip
-    created_at      timestamptz NOT NULL DEFAULT now(),
+-- ----- trip_stops -----------------------------------------------------------
+CREATE TABLE trip_stops (
+    trip_stop_id  serial PRIMARY KEY,
+    trip_id       integer NOT NULL REFERENCES trips(trip_id)   ON DELETE CASCADE,
+    city_id       integer NOT NULL REFERENCES cities(city_id)   ON DELETE RESTRICT,
+    start_date    date NOT NULL,
+    end_date      date NOT NULL,
+    seq           integer NOT NULL,
+    created_at    timestamptz NOT NULL DEFAULT now(),
     CHECK (end_date >= start_date),
     CHECK (seq >= 0),
-    UNIQUE (trip_id, seq),                                  -- no two stops share order
-    UNIQUE (trip_id, city_id)                               -- one row per city per trip
+    UNIQUE (trip_id, seq),
+    UNIQUE (trip_id, city_id)
 );
-CREATE INDEX stops_by_trip ON stops (trip_id);
-CREATE INDEX stops_by_city ON stops (city_id);
+CREATE INDEX trip_stops_by_trip ON trip_stops (trip_id);
+CREATE INDEX trip_stops_by_city ON trip_stops (city_id);
 
--- ----- stop_activities (join: which activities on which stop, when) ----------
--- The join table the spec asks for. Holds scheduling + per-stop overrides
--- (e.g. "2 tickets", "skip"), and is what the budget query aggregates over.
-CREATE TABLE stop_activities (
-    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    stop_id         uuid NOT NULL REFERENCES stops(id) ON DELETE CASCADE,
-    activity_id     uuid NOT NULL REFERENCES activities(id) ON DELETE RESTRICT,
-    scheduled_day   date,                                   -- nullable = "sometime in this stop"
-    scheduled_time  time,                                   -- optional time-of-day
-    quantity        integer NOT NULL DEFAULT 1 CHECK (quantity > 0),
-    override_cost   numeric(10,2),                          -- optional per-stop price override
-    note            text,
+-- ----- trip_days ------------------------------------------------------------
+CREATE TABLE trip_days (
+    trip_day_id    serial PRIMARY KEY,
+    trip_stop_id   integer NOT NULL REFERENCES trip_stops(trip_stop_id) ON DELETE CASCADE,
+    trip_id        integer NOT NULL REFERENCES trips(trip_id)           ON DELETE CASCADE,
+    date           date   NOT NULL,
+    day_index      integer NOT NULL,
+    created_at     timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (trip_stop_id, day_index)
+);
+CREATE INDEX trip_days_by_trip ON trip_days (trip_id);
+
+-- ----- itinerary_items ------------------------------------------------------
+CREATE TABLE itinerary_items (
+    itinerary_item_id  serial PRIMARY KEY,
+    trip_day_id        integer NOT NULL REFERENCES trip_days(trip_day_id)   ON DELETE CASCADE,
+    activity_id        integer NOT NULL REFERENCES activities(activity_id)   ON DELETE RESTRICT,
+    scheduled_time     time,
+    quantity           integer NOT NULL DEFAULT 1 CHECK (quantity > 0),
+    override_cost      numeric(10,2),
+    note               text,
+    created_at         timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX itinerary_items_by_day      ON itinerary_items (trip_day_id);
+CREATE INDEX itinerary_items_by_activity ON itinerary_items (activity_id);
+
+-- ----- expenses -------------------------------------------------------------
+CREATE TABLE expenses (
+    expense_id      serial PRIMARY KEY,
+    trip_id         integer NOT NULL REFERENCES trips(trip_id)         ON DELETE CASCADE,
+    paid_by         integer NOT NULL REFERENCES users(user_id)         ON DELETE RESTRICT,
+    category_id     integer          REFERENCES categories(category_id) ON DELETE SET NULL,
+    description     text,
+    amount          numeric(12,2) NOT NULL,
+    currency        char(3) NOT NULL DEFAULT 'USD',
+    expense_date    date NOT NULL,
     created_at      timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX stop_activities_by_stop ON stop_activities (stop_id);
-CREATE INDEX stop_activities_by_activity ON stop_activities (activity_id);
+CREATE INDEX expenses_by_trip    ON expenses (trip_id);
+CREATE INDEX expenses_by_paid_by ON expenses (paid_by);
 
 COMMIT;
