@@ -1,383 +1,115 @@
-import React, { useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
-import { 
-  Users, 
-  Map, 
-  Globe2, 
-  Sparkles, 
-  ArrowUpRight, 
-  TrendingUp, 
-  Compass, 
-  Eye, 
-  Plus, 
-  ArrowRight
-} from 'lucide-react';
-import { 
-  ADMIN_STATS, 
-  INITIAL_ADMIN_TRIPS, 
-  INITIAL_ADMIN_DESTINATIONS 
-} from '../../data/adminData';
-import type { AdminTripItem } from '../../types/admin';
-import './AdminDashboard.css';
+import React from 'react';
+import { Users, Compass, MapPin, DollarSign, TrendingUp, Sparkles } from 'lucide-react';
+import { useTrip } from '../../context/useTrip';
+import '../../styles/Modules.css';
 
 export const AdminDashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const { searchQuery } = useOutletContext<{ searchQuery?: string }>();
-  const [trips, setTrips] = useState<AdminTripItem[]>(INITIAL_ADMIN_TRIPS);
-  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
-
-  const filteredTrips = trips.filter(trip => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      trip.title.toLowerCase().includes(query) ||
-      trip.destination.toLowerCase().includes(query) ||
-      trip.userName.toLowerCase().includes(query)
-    );
-  });
-
-  const togglePublic = (tripId: string) => {
-    setTrips(prev => 
-      prev.map(t => t.id === tripId ? { ...t, isPublic: !t.isPublic } : t)
-    );
-  };
+  const { trips, adminUsers } = useTrip();
 
   return (
-    <div className="admin-dashboard-page">
-      {/* Top Welcome Banner */}
-      <div className="dashboard-welcome-banner">
-        <div className="welcome-text-block">
-          <h2>Welcome back, Administrator</h2>
-          <p>Here is your high-level overview of traveler acquisition, trip planning volume, and platform destinations.</p>
+    <div>
+      <div style={{ marginBottom: '2rem' }}>
+        <span className="module-eyebrow">
+          <Sparkles size={16} /> OVERVIEW METRICS
+        </span>
+        <h1 className="module-title">Platform Dashboard</h1>
+        <p className="module-subtitle">Monitor user activity, trip creations, system volume, and revenue metrics.</p>
+      </div>
+
+      {/* Metric Cards Grid */}
+      <div className="budget-summary-grid">
+        <div className="budget-metric-card shadow-subtle">
+          <span className="metric-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Users size={16} /> Total Registered Users
+          </span>
+          <div className="metric-val">{adminUsers.length + 1240}</div>
+          <span className="metric-status-badge status-ok">+18% this month</span>
         </div>
 
-        <div className="banner-controls">
-          <div className="time-range-segmented">
-            {(['7d', '30d', '90d', 'all'] as const).map(range => (
-              <button
-                key={range}
-                className={`time-range-btn ${timeRange === range ? 'active' : ''}`}
-                onClick={() => setTimeRange(range)}
-              >
-                {range === '7d' ? '7 Days' : range === '30d' ? '30 Days' : range === '90d' ? '3 Months' : 'All Time'}
-              </button>
-            ))}
+        <div className="budget-metric-card shadow-subtle">
+          <span className="metric-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Compass size={16} /> Total Trips Planned
+          </span>
+          <div className="metric-val" style={{ color: 'var(--color-sunset-orange)' }}>
+            {trips.length + 480}
           </div>
+          <span className="metric-status-badge status-ok">+24% this month</span>
+        </div>
 
-          <button 
-            className="btn-admin-action-primary"
-            onClick={() => navigate('/admin/users')}
-          >
-            <Plus size={16} />
-            <span>Manage Users</span>
-          </button>
+        <div className="budget-metric-card shadow-subtle">
+          <span className="metric-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <MapPin size={16} /> Active Destinations
+          </span>
+          <div className="metric-val">84</div>
+          <span className="metric-status-badge status-ok">Global Coverage</span>
+        </div>
+
+        <div className="budget-metric-card shadow-subtle">
+          <span className="metric-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <DollarSign size={16} /> Platform Volume (INR)
+          </span>
+          <div className="metric-val" style={{ color: '#32B48A', fontSize: '1.8rem' }}>
+            ₹12,45,000
+          </div>
+          <span className="metric-status-badge status-ok">+15% revenue growth</span>
         </div>
       </div>
 
-      {/* SECTION 26: 5 Core Platform Statistics Cards */}
-      <div className="admin-kpi-grid">
-        {/* Total Users */}
-        <div className="kpi-card">
-          <div className="kpi-top">
-            <div className="kpi-icon-box users">
-              <Users size={20} />
-            </div>
-            <div className="kpi-trend positive">
-              <ArrowUpRight size={14} />
-              <span>+{ADMIN_STATS.userGrowthPercent}%</span>
-            </div>
-          </div>
-          <div className="kpi-value-group">
-            <h3 className="kpi-number">{ADMIN_STATS.totalUsers.toLocaleString()}</h3>
-            <span className="kpi-label">Total Users</span>
-          </div>
-          <div className="kpi-footer-sub">
-            <span>+1,420 new travelers this month</span>
-          </div>
-        </div>
+      {/* Chart & Activity Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: '60% 40%', gap: '2rem' }}>
+        <div className="admin-table-card shadow-subtle">
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', fontWeight: 800, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <TrendingUp size={18} /> User & Trip Growth Trend (2026)
+          </h3>
 
-        {/* Total Trips */}
-        <div className="kpi-card">
-          <div className="kpi-top">
-            <div className="kpi-icon-box trips">
-              <Map size={20} />
-            </div>
-            <div className="kpi-trend positive">
-              <ArrowUpRight size={14} />
-              <span>+{ADMIN_STATS.tripGrowthPercent}%</span>
-            </div>
-          </div>
-          <div className="kpi-value-group">
-            <h3 className="kpi-number">{ADMIN_STATS.totalTrips.toLocaleString()}</h3>
-            <span className="kpi-label">Total Trips Created</span>
-          </div>
-          <div className="kpi-footer-sub">
-            <span>Average 5.4 days per itinerary</span>
-          </div>
-        </div>
-
-        {/* Public Trips */}
-        <div className="kpi-card">
-          <div className="kpi-top">
-            <div className="kpi-icon-box public-trips">
-              <Globe2 size={20} />
-            </div>
-            <div className="kpi-trend neutral">
-              <span>{ADMIN_STATS.publicTripsPercent}%</span>
-            </div>
-          </div>
-          <div className="kpi-value-group">
-            <h3 className="kpi-number">{ADMIN_STATS.publicTrips.toLocaleString()}</h3>
-            <span className="kpi-label">Public Community Trips</span>
-          </div>
-          <div className="kpi-footer-sub">
-            <span>Shared with explorer community</span>
-          </div>
-        </div>
-
-        {/* Total Destinations */}
-        <div className="kpi-card">
-          <div className="kpi-top">
-            <div className="kpi-icon-box destinations">
-              <Compass size={20} />
-            </div>
-            <div className="kpi-trend positive">
-              <span>48 Countries</span>
-            </div>
-          </div>
-          <div className="kpi-value-group">
-            <h3 className="kpi-number">{ADMIN_STATS.totalDestinations}</h3>
-            <span className="kpi-label">Active Destinations</span>
-          </div>
-          <div className="kpi-footer-sub">
-            <span>6 featured this season</span>
-          </div>
-        </div>
-
-        {/* Total Activities */}
-        <div className="kpi-card">
-          <div className="kpi-top">
-            <div className="kpi-icon-box activities">
-              <Sparkles size={20} />
-            </div>
-            <div className="kpi-trend positive">
-              <span>Verified</span>
-            </div>
-          </div>
-          <div className="kpi-value-group">
-            <h3 className="kpi-number">{ADMIN_STATS.totalActivities.toLocaleString()}</h3>
-            <span className="kpi-label">Curated Activities</span>
-          </div>
-          <div className="kpi-footer-sub">
-            <span>Avg rating 4.8 / 5.0</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Analytics Breakdown & Popular Destinations Row */}
-      <div className="dashboard-two-col-grid">
-        {/* Left: Popular Destinations Breakdown */}
-        <div className="admin-card-panel">
-          <div className="panel-header-row">
-            <div>
-              <h3 className="panel-title">Top Destinations by Booking Volume</h3>
-              <p className="panel-subtitle">Current travel demand across global hotspots</p>
-            </div>
-            <button 
-              className="btn-panel-link"
-              onClick={() => navigate('/admin/destinations')}
-            >
-              <span>View All</span>
-              <ArrowRight size={14} />
-            </button>
-          </div>
-
-          <div className="destinations-rank-list">
-            {INITIAL_ADMIN_DESTINATIONS.slice(0, 5).map((dest, idx) => (
-              <div key={dest.id} className="rank-item-row">
-                <span className="rank-badge">0{idx + 1}</span>
-                <div className="rank-info-block">
-                  <div className="rank-title-row">
-                    <strong>{dest.name}, {dest.country}</strong>
-                    <span className="rank-trips-count">{dest.totalTrips.toLocaleString()} trips planned</span>
-                  </div>
-                  <div className="rank-progress-track">
-                    <div 
-                      className="rank-progress-fill"
-                      style={{ width: `${dest.popularityScore}%` }}
-                    ></div>
-                  </div>
-                  <div className="rank-meta-row">
-                    <span>Region: {dest.region}</span>
-                    <span>Avg Budget: {dest.currency}{dest.averageCost.toLocaleString()}</span>
-                  </div>
-                </div>
+          {/* Simple Visual SVG Chart */}
+          <div style={{ height: '220px', width: '100%', display: 'flex', alignItems: 'flex-end', gap: '1rem', padding: '1rem 0' }}>
+            {[
+              { month: 'Jan', val: 40 },
+              { month: 'Feb', val: 55 },
+              { month: 'Mar', val: 65 },
+              { month: 'Apr', val: 80 },
+              { month: 'May', val: 70 },
+              { month: 'Jun', val: 90 },
+              { month: 'Jul', val: 95 },
+              { month: 'Aug', val: 110 },
+            ].map((item) => (
+              <div key={item.month} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                <div
+                  style={{
+                    width: '100%',
+                    height: `${item.val * 1.5}px`,
+                    background: 'linear-gradient(135deg, #FF7A45, #FF4F9A)',
+                    borderRadius: '8px 8px 0 0',
+                    transition: 'height 0.3s ease',
+                  }}
+                ></div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>{item.month}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Right: Platform Health & Quick Metrics */}
-        <div className="admin-card-panel">
-          <div className="panel-header-row">
-            <div>
-              <h3 className="panel-title">Trip Planning Velocity</h3>
-              <p className="panel-subtitle">Monthly itinerary construction distribution</p>
-            </div>
-            <div className="panel-badge-sunset">
-              <TrendingUp size={14} />
-              <span>Healthy Growth</span>
-            </div>
+        <div className="admin-table-card shadow-subtle">
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', fontWeight: 800, marginBottom: '1rem' }}>
+            Recent Activity Log
+          </h3>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            {[
+              { text: 'User Alex Rivera created trip "Japan Cultural Discovery"', time: '10m ago' },
+              { text: 'New activity "Sunset Catamaran Cruise" published', time: '42m ago' },
+              { text: 'User Elena Rostova posted in Community', time: '2h ago' },
+              { text: 'System backup completed successfully', time: '5h ago' },
+            ].map((log, idx) => (
+              <div key={idx} style={{ padding: '0.75rem', borderRadius: '12px', background: 'var(--bg-primary)', border: '1px solid var(--border)', fontSize: '0.85rem' }}>
+                <p style={{ fontWeight: 700, margin: 0 }}>{log.text}</p>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{log.time}</span>
+              </div>
+            ))}
           </div>
-
-          <div className="velocity-metric-container">
-            <div className="velocity-stat-highlight">
-              <span className="big-stat-val">₹32.4 Cr</span>
-              <span className="big-stat-desc">Total Cumulative Itinerary Budget Planned in 2026</span>
-            </div>
-
-            <div className="category-bars-stack">
-              <div className="bar-stat-item">
-                <div className="bar-header">
-                  <span>Sightseeing & Tours</span>
-                  <strong>38% (9,838 Trips)</strong>
-                </div>
-                <div className="bar-track">
-                  <div className="bar-fill" style={{ width: '38%', background: '#3155D9' }}></div>
-                </div>
-              </div>
-
-              <div className="bar-stat-item">
-                <div className="bar-header">
-                  <span>Beaches & Island Relaxation</span>
-                  <strong>29% (7,508 Trips)</strong>
-                </div>
-                <div className="bar-track">
-                  <div className="bar-fill" style={{ width: '29%', background: '#FF8A3D' }}></div>
-                </div>
-              </div>
-
-              <div className="bar-stat-item">
-                <div className="bar-header">
-                  <span>Mountain & Trekking Adventure</span>
-                  <strong>21% (5,436 Trips)</strong>
-                </div>
-                <div className="bar-track">
-                  <div className="bar-fill" style={{ width: '21%', background: '#7657E8' }}></div>
-                </div>
-              </div>
-
-              <div className="bar-stat-item">
-                <div className="bar-header">
-                  <span>Luxury & Gastronomy</span>
-                  <strong>12% (3,108 Trips)</strong>
-                </div>
-                <div className="bar-track">
-                  <div className="bar-fill" style={{ width: '12%', background: '#FF647C' }}></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Trips Moderation Table */}
-      <div className="admin-card-panel">
-        <div className="panel-header-row">
-          <div>
-            <h3 className="panel-title">Recent Platform Trips</h3>
-            <p className="panel-subtitle">Real-time trip creations and visibility moderation</p>
-          </div>
-          <button 
-            className="btn-panel-link"
-            onClick={() => navigate('/admin/trips')}
-          >
-            <span>View All Trips ({trips.length})</span>
-            <ArrowRight size={14} />
-          </button>
-        </div>
-
-        <div className="admin-table-container">
-          <table className="admin-data-table">
-            <thead>
-              <tr>
-                <th>Trip & Destination</th>
-                <th>Created By</th>
-                <th>Dates & Duration</th>
-                <th>Allocated Budget</th>
-                <th>Visibility</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTrips.slice(0, 5).map(trip => (
-                <tr key={trip.id}>
-                  <td>
-                    <div className="table-trip-title-group">
-                      <span className="table-trip-name">{trip.title}</span>
-                      <span className="table-trip-dest">📍 {trip.destination}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="table-user-group">
-                      <span className="table-user-name">{trip.userName}</span>
-                      <span className="table-user-email">{trip.userEmail}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="table-date-group">
-                      <span>{trip.startDate} to {trip.endDate}</span>
-                      <span className="table-travelers-count">{trip.travelers} Travelers • {trip.sectionsCount} Sections</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span className="table-budget-amount">
-                      {trip.currency}{trip.budget.toLocaleString()}
-                    </span>
-                  </td>
-                  <td>
-                    <button 
-                      className={`visibility-pill-btn ${trip.isPublic ? 'public' : 'private'}`}
-                      onClick={() => togglePublic(trip.id)}
-                      title="Click to toggle public/private"
-                    >
-                      {trip.isPublic ? (
-                        <>
-                          <Globe2 size={12} />
-                          <span>Public</span>
-                        </>
-                      ) : (
-                        <>
-                          <Eye size={12} />
-                          <span>Private</span>
-                        </>
-                      )}
-                    </button>
-                  </td>
-                  <td>
-                    <span className={`status-pill ${trip.status.toLowerCase().replace(' ', '-')}`}>
-                      {trip.status}
-                    </span>
-                  </td>
-                  <td>
-                    <button 
-                      className="table-action-btn"
-                      onClick={() => navigate('/trips/build')}
-                      title="Inspect Itinerary"
-                    >
-                      <span>View</span>
-                      <ArrowRight size={13} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
     </div>
   );
 };
-
-export default AdminDashboard;

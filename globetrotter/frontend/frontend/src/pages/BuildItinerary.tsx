@@ -1,554 +1,318 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { 
-  CalendarDays, 
-  MapPin, 
-  Wallet, 
-  Plus, 
-  Trash2, 
-  Edit3, 
-  ArrowLeft, 
-  Share2, 
-  CheckCircle2, 
-  Sparkles, 
-  Plane, 
-  Hotel, 
-  Compass, 
-  Utensils, 
-  Palmtree, 
-  X, 
-  Layers,
-  Calendar
+  Calendar, MapPin, Plus, Trash2, Share2, DollarSign, Clock, CheckCircle2, X 
 } from 'lucide-react';
 import { useTrip } from '../context/useTrip';
-import { Navbar } from '../components/Navbar';
-import type { ItinerarySection } from '../types/trip';
-import './BuildItinerary.css';
+import type { Trip, ItineraryItem, DestinationStop } from '../data/tripData';
+import { activitiesData } from '../data/activitiesData';
+import '../styles/Modules.css';
 
 export const BuildItinerary: React.FC = () => {
-  const navigate = useNavigate();
-  const { 
-    tripData, 
-    addSection, 
-    updateSection, 
-    deleteSection, 
-    totalSectionBudget,
-    calculatedDays
-  } = useTrip();
+  const { id } = useParams<{ id: string }>();
+  const { trips, itineraryItems, addItineraryItem, deleteItineraryItem } = useTrip();
 
-  // Modal / Form state for Adding or Editing a section
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
+  const currentTrip = trips.find((t: Trip) => t.id === id) || trips[0];
+  const [selectedDay, setSelectedDay] = useState<number>(1);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  const [formTitle, setFormTitle] = useState('');
-  const [formCategory, setFormCategory] = useState<ItinerarySection['category']>('Activity');
-  const [formDescription, setFormDescription] = useState('');
-  const [formStartDate, setFormStartDate] = useState(tripData.startDate || '2026-09-10');
-  const [formEndDate, setFormEndDate] = useState(tripData.endDate || '2026-09-11');
-  const [formBudget, setFormBudget] = useState<number>(15000);
-  const [formLocation, setFormLocation] = useState(tripData.destination || 'Santorini, Greece');
-  const [formActivities, setFormActivities] = useState('');
-  const [formNotes, setFormNotes] = useState('');
+  // New activity modal state
+  const [actTitle, setActTitle] = useState('');
+  const [actTime, setActTime] = useState('10:00');
+  const [actDuration, setActDuration] = useState(2);
+  const [actCost, setActCost] = useState(3500);
+  const [actCategory, setActCategory] = useState('Activities');
+  const [actNotes, setActNotes] = useState('');
 
-  const [copiedLink, setCopiedLink] = useState(false);
+  const currentTripItems = itineraryItems.filter((item: ItineraryItem) => item.tripId === currentTrip.id);
+  const dayItems = currentTripItems
+    .filter((item: ItineraryItem) => item.dayNumber === selectedDay)
+    .sort((a: ItineraryItem, b: ItineraryItem) => a.time.localeCompare(b.time));
 
-  // Budget calculations
-  const budgetPercentage = Math.min(
-    100, 
-    Math.round((totalSectionBudget / (tripData.estimatedBudget || 1)) * 100)
+  const totalTripDays = Math.max(
+    1,
+    Math.ceil(
+      (new Date(currentTrip.endDate).getTime() - new Date(currentTrip.startDate).getTime()) /
+        (1000 * 60 * 60 * 24)
+    ) + 1
   );
-  const budgetRemaining = (tripData.estimatedBudget || 0) - totalSectionBudget;
 
-  const openAddModal = () => {
-    setEditingSectionId(null);
-    setFormTitle(`Section ${tripData.sections.length + 1}: `);
-    setFormCategory('Activity');
-    setFormDescription('All the necessary information about this section. This can be anything like travel section, hotel or any other activity');
-    setFormStartDate(tripData.startDate || '2026-09-12');
-    setFormEndDate(tripData.endDate || '2026-09-13');
-    setFormBudget(18000);
-    setFormLocation(tripData.destination);
-    setFormActivities('');
-    setFormNotes('');
-    setIsModalOpen(true);
-  };
-
-  const openEditModal = (section: ItinerarySection) => {
-    setEditingSectionId(section.id);
-    setFormTitle(section.title);
-    setFormCategory(section.category);
-    setFormDescription(section.description);
-    setFormStartDate(section.startDate);
-    setFormEndDate(section.endDate);
-    setFormBudget(section.budget);
-    setFormLocation(section.location);
-    setFormActivities(section.activities ? section.activities.join(', ') : '');
-    setFormNotes(section.notes || '');
-    setIsModalOpen(true);
-  };
-
-  const handleModalSubmit = (e: React.FormEvent) => {
+  const handleAddActivitySubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const dateRangeStr = `${formStartDate} to ${formEndDate}`;
-    const activitiesList = formActivities
-      .split(',')
-      .map(s => s.trim())
-      .filter(Boolean);
+    if (!actTitle.trim()) return;
 
-    if (editingSectionId) {
-      updateSection(editingSectionId, {
-        title: formTitle,
-        category: formCategory,
-        description: formDescription,
-        startDate: formStartDate,
-        endDate: formEndDate,
-        dateRange: dateRangeStr,
-        budget: Number(formBudget),
-        location: formLocation,
-        activities: activitiesList,
-        notes: formNotes
-      });
-    } else {
-      addSection({
-        title: formTitle,
-        category: formCategory,
-        description: formDescription,
-        startDate: formStartDate,
-        endDate: formEndDate,
-        dateRange: dateRangeStr,
-        budget: Number(formBudget),
-        currency: tripData.currency,
-        location: formLocation,
-        activities: activitiesList,
-        notes: formNotes,
-        status: 'planned'
-      });
-    }
+    addItineraryItem({
+      tripId: currentTrip.id,
+      dayNumber: selectedDay,
+      date: currentTrip.startDate,
+      time: actTime,
+      title: actTitle.trim(),
+      destination: currentTrip.destinations[0]?.city || 'Destination',
+      duration: Number(actDuration),
+      cost: Number(actCost),
+      category: actCategory,
+      notes: actNotes,
+      image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=400&q=80',
+    });
 
-    setIsModalOpen(false);
+    setActTitle('');
+    setActNotes('');
+    setIsAddModalOpen(false);
   };
 
-  const getCategoryIcon = (category: ItinerarySection['category']) => {
-    switch (category) {
-      case 'Travel':
-        return <Plane size={16} className="category-icon travel" />;
-      case 'Hotel':
-        return <Hotel size={16} className="category-icon hotel" />;
-      case 'Dining':
-        return <Utensils size={16} className="category-icon dining" />;
-      case 'Relaxation':
-        return <Palmtree size={16} className="category-icon relaxation" />;
-      case 'Sightseeing':
-      case 'Activity':
-      default:
-        return <Compass size={16} className="category-icon activity" />;
-    }
-  };
-
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
+  const handlePickPresetActivity = (title: string, category: string, price: number) => {
+    setActTitle(title);
+    setActCategory(category);
+    setActCost(price);
   };
 
   return (
-    <div className="build-itinerary-page">
-      <Navbar />
-
-      {/* Screen Identifier Bar */}
-      <div className="screen-badge-bar">
-        <div className="screen-badge-inner">
-          <div className="screen-badge">
-            <span className="badge-dot"></span>
-            <strong>SCREEN 5:</strong> Build Itinerary Screen
-          </div>
-          <div className="screen-flow-step">
-            Step 2 of 2: Multi-Section Journey Organizer & Budget Breakdown
-          </div>
-        </div>
-      </div>
-
-      <main className="itinerary-main-container">
-        {/* Navigation & Trip Control Bar */}
-        <div className="itinerary-top-bar">
-          <button 
-            className="btn-back-link"
-            onClick={() => navigate('/')}
-          >
-            <ArrowLeft size={16} />
-            <span>Back to Plan Trip (Screen 4)</span>
-          </button>
-
-          <div className="top-bar-actions">
-            <button className="btn-share-itinerary" onClick={handleShare}>
-              {copiedLink ? <CheckCircle2 size={16} className="text-success" /> : <Share2 size={16} />}
-              <span>{copiedLink ? 'Link Copied!' : 'Share Itinerary'}</span>
-            </button>
-            <button className="btn-save-journey" onClick={() => alert('Journey saved successfully!')}>
-              <Sparkles size={16} />
-              <span>Save Journey</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Trip Overview Header Card */}
-        <section className="itinerary-header-card">
-          <div className="header-card-content">
-            <div className="trip-tag-pill">
-              <Sparkles size={13} />
-              <span>Sunset Journey Itinerary</span>
-            </div>
-
-            <h1 className="itinerary-trip-title">{tripData.title}</h1>
-
-            <div className="trip-meta-chips-row">
-              <div className="meta-chip">
-                <MapPin size={15} className="chip-icon text-coral" />
-                <span>{tripData.destination}</span>
-              </div>
-              <div className="meta-chip">
-                <CalendarDays size={15} className="chip-icon text-ocean" />
-                <span>{calculatedDays} Days ({tripData.startDate} — {tripData.endDate})</span>
-              </div>
-              <div className="meta-chip">
-                <Layers size={15} className="chip-icon" />
-                <span>{tripData.sections.length} Itinerary Sections</span>
-              </div>
-            </div>
-
-            {/* Budget Progress Bar */}
-            <div className="itinerary-budget-bar-box">
-              <div className="budget-bar-header">
-                <div className="budget-label-group">
-                  <span className="budget-text-label">Allocated Section Budget</span>
-                  <span className="budget-allocated-val">
-                    {tripData.currency}{totalSectionBudget.toLocaleString()} / {tripData.currency}{tripData.estimatedBudget.toLocaleString()}
-                  </span>
-                </div>
-                <div className="budget-percentage-badge">
-                  {budgetPercentage}% Planned
-                </div>
-              </div>
-
-              <div className="progress-track">
-                <div 
-                  className="progress-fill-sunset"
-                  style={{ width: `${budgetPercentage}%` }}
-                ></div>
-              </div>
-
-              <div className="budget-bar-footer">
-                <span>Total Target: {tripData.currency}{tripData.estimatedBudget.toLocaleString()}</span>
-                <span className={budgetRemaining >= 0 ? 'text-positive' : 'text-negative'}>
-                  {budgetRemaining >= 0 ? `Remaining: ${tripData.currency}${budgetRemaining.toLocaleString()}` : `Over Budget by: ${tripData.currency}${Math.abs(budgetRemaining).toLocaleString()}`}
-                </span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* SECTION 1, 2, 3... (Wireframe Stack) */}
-        <section className="sections-stack-container">
-          <div className="stack-header-row">
+    <div className="module-page-container">
+      <div className="container">
+        {/* Header Card */}
+        <div className="itinerary-header-card" style={{ marginTop: '2.5rem' }}>
+          <div className="itinerary-top-row">
             <div>
-              <h2 className="stack-title">Itinerary Timeline Sections</h2>
-              <p className="stack-subtitle">
-                Organize your journey into structured travel, hotel, and activity sections as shown in Screen 5.
+              <span className="module-eyebrow">
+                <Calendar size={16} /> Interactive Itinerary Builder
+              </span>
+              <h1 className="module-title">{currentTrip.name}</h1>
+              <p className="module-subtitle">
+                {currentTrip.startDate} to {currentTrip.endDate} • {currentTrip.travelers} Travelers
               </p>
             </div>
 
-            <button className="btn-primary-add-section" onClick={openAddModal}>
-              <Plus size={16} />
-              <span>+ Add Section</span>
-            </button>
-          </div>
-
-          {/* Sections List */}
-          <div className="itinerary-cards-list">
-            {tripData.sections.length === 0 ? (
-              <div className="empty-sections-state">
-                <Compass size={48} className="empty-icon" />
-                <h3>No sections added yet</h3>
-                <p>Click the button below to add your first travel, accommodation, or activity section.</p>
-                <button className="btn-add-first-section" onClick={openAddModal}>
-                  <Plus size={16} />
-                  <span>Add First Section</span>
-                </button>
-              </div>
-            ) : (
-              tripData.sections.map((section, index) => (
-                <div key={section.id} className="section-card-wireframe">
-                  {/* Card Left Badge & Number */}
-                  <div className="section-number-rail">
-                    <span className="rail-number">{index + 1}</span>
-                    <div className="rail-line"></div>
-                  </div>
-
-                  {/* Card Content Area */}
-                  <div className="section-card-body">
-                    <div className="section-card-top-row">
-                      <div className="section-title-group">
-                        <div className="section-category-pill">
-                          {getCategoryIcon(section.category)}
-                          <span>{section.category}</span>
-                        </div>
-                        <h3 className="section-heading-text">
-                          {section.title.startsWith('Section') ? section.title : `Section ${index + 1}: ${section.title}`}
-                        </h3>
-                      </div>
-
-                      {/* Edit / Delete Controls */}
-                      <div className="section-actions-group">
-                        <button 
-                          className="btn-action-icon edit-action"
-                          onClick={() => openEditModal(section)}
-                          title="Edit section"
-                          aria-label="Edit section"
-                        >
-                          <Edit3 size={16} />
-                        </button>
-                        <button 
-                          className="btn-action-icon delete-action"
-                          onClick={() => deleteSection(section.id)}
-                          title="Delete section"
-                          aria-label="Delete section"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Section Description (Wireframe Text) */}
-                    <p className="section-description-text">
-                      {section.description}
-                    </p>
-
-                    {/* Sub-Activities tags if present */}
-                    {section.activities && section.activities.length > 0 && (
-                      <div className="section-sub-activities">
-                        {section.activities.map((act, actIdx) => (
-                          <span key={actIdx} className="sub-act-pill">
-                            ✓ {act}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Wireframe Detail Row: Date Range & Budget */}
-                    <div className="section-meta-boxes-row">
-                      {/* Date Range Box */}
-                      <div className="meta-box date-range-box">
-                        <div className="box-header-label">
-                          <Calendar size={13} />
-                          <span>Date Range</span>
-                        </div>
-                        <div className="box-value-text">
-                          {section.dateRange || `${section.startDate} to ${section.endDate}`}
-                        </div>
-                      </div>
-
-                      {/* Budget Box */}
-                      <div className="meta-box budget-box">
-                        <div className="box-header-label">
-                          <Wallet size={13} />
-                          <span>Budget of this section</span>
-                        </div>
-                        <div className="box-value-text budget-highlight">
-                          {section.currency || tripData.currency}{section.budget ? Number(section.budget).toLocaleString() : '0'}
-                        </div>
-                      </div>
-
-                      {/* Location Box */}
-                      {section.location && (
-                        <div className="meta-box location-box">
-                          <div className="box-header-label">
-                            <MapPin size={13} />
-                            <span>Location</span>
-                          </div>
-                          <div className="box-value-text">
-                            {section.location}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Wireframe Button: + Add another Section */}
-          <button 
-            type="button" 
-            className="btn-wireframe-add-section"
-            onClick={openAddModal}
-          >
-            <div className="add-icon-circle">
-              <Plus size={20} />
-            </div>
-            <span className="add-btn-text">+ Add another Section</span>
-          </button>
-        </section>
-      </main>
-
-      {/* Interactive Modal for Adding / Editing a Section */}
-      {isModalOpen && (
-        <div className="modal-backdrop-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-dialog-box" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header-row">
-              <div className="modal-title-wrap">
-                <div className="modal-icon-badge">
-                  <Layers size={18} />
-                </div>
-                <h3>{editingSectionId ? 'Edit Itinerary Section' : 'Add New Itinerary Section'}</h3>
-              </div>
+            <div className="itinerary-actions-group">
               <button 
-                className="modal-close-btn"
-                onClick={() => setIsModalOpen(false)}
-                aria-label="Close modal"
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  alert('Trip link copied to clipboard!');
+                }}
+                className="btn-outline-cta"
               >
-                <X size={18} />
+                <Share2 size={16} /> Share
+              </button>
+              <Link to={`/trips/${currentTrip.id}/budget`} className="btn-gradient-cta">
+                <DollarSign size={16} /> Budget Tracker
+              </Link>
+            </div>
+          </div>
+
+          {/* Route Horizontal Bar */}
+          <div className="route-visual-bar">
+            <span className="form-label" style={{ marginRight: '0.5rem' }}>Route:</span>
+            {currentTrip.destinations.map((d: DestinationStop, index: number) => (
+              <React.Fragment key={d.id}>
+                <span className="route-stop-pill">
+                  <MapPin size={14} /> {d.city} ({d.days}d)
+                </span>
+                {index < currentTrip.destinations.length - 1 && <span className="route-arrow">→</span>}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+
+        {/* Day Tabs Scroll */}
+        <div className="day-tabs-scroll">
+          {Array.from({ length: totalTripDays }).map((_, index: number) => {
+            const dayNum = index + 1;
+            const count = currentTripItems.filter((i: ItineraryItem) => i.dayNumber === dayNum).length;
+
+            return (
+              <button
+                key={dayNum}
+                className={`day-tab-btn ${selectedDay === dayNum ? 'active' : ''}`}
+                onClick={() => setSelectedDay(dayNum)}
+              >
+                <span className="tab-day-title">Day {dayNum}</span>
+                <span className="tab-day-sub">{count} Activities</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Timeline Header & Add Action */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.8rem', fontWeight: 800 }}>
+            Day {selectedDay} Timeline
+          </h2>
+          <button onClick={() => setIsAddModalOpen(true)} className="btn-gradient-cta">
+            <Plus size={18} /> Add Activity
+          </button>
+        </div>
+
+        {/* Vertical Timeline */}
+        <div className="timeline-vertical-container">
+          {dayItems.length === 0 ? (
+            <div className="empty-activities-card shadow-subtle" style={{ margin: '2rem 0' }}>
+              <Calendar size={40} style={{ color: 'var(--color-sunset-orange)', marginBottom: '1rem' }} />
+              <h3>No Activities Planned for Day {selectedDay}</h3>
+              <p>Add sights, tours, food stops, or notes to build your daily schedule.</p>
+              <button onClick={() => setIsAddModalOpen(true)} className="btn-gradient-cta">
+                <Plus size={16} /> Add First Activity
               </button>
             </div>
+          ) : (
+            dayItems.map((item: ItineraryItem) => (
+              <div key={item.id} className="timeline-item-row">
+                <div className="timeline-node-dot">
+                  <CheckCircle2 size={14} />
+                </div>
 
-            <form onSubmit={handleModalSubmit} className="modal-form-content">
-              {/* Section Title */}
-              <div className="modal-field">
-                <label>Section Title</label>
-                <input 
-                  type="text" 
-                  value={formTitle} 
-                  onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder="e.g. Section 4: Sunset Wine Tasting & Coastal Cruise"
+                <div className="timeline-item-card shadow-subtle">
+                  <div className="time-slot-badge">{item.time}</div>
+
+                  <div className="item-thumb-box">
+                    <img
+                      src={item.image || 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=400&q=80'}
+                      alt={item.title}
+                      className="item-thumb-img"
+                    />
+                  </div>
+
+                  <div className="item-main-details">
+                    <h4>{item.title}</h4>
+                    <div className="item-meta-tags">
+                      <span><Clock size={12} /> {item.duration}h</span>
+                      <span><MapPin size={12} /> {item.destination}</span>
+                      <span><DollarSign size={12} /> ₹{item.cost.toLocaleString('en-IN')}</span>
+                      <span className="category-pill">{item.category}</span>
+                    </div>
+                    {item.notes && (
+                      <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.3rem' }}>
+                        {item.notes}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <button
+                      onClick={() => deleteItineraryItem(item.id)}
+                      className="btn-outline-cta"
+                      style={{ padding: '0.4rem 0.6rem', color: '#E5484D' }}
+                      title="Delete activity"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Add Activity Modal */}
+      {isAddModalOpen && (
+        <div className="modal-backdrop">
+          <div className="modal-card shadow-medium" style={{ maxWidth: '580px' }}>
+            <button onClick={() => setIsAddModalOpen(false)} className="modal-close-btn">
+              <X size={20} />
+            </button>
+
+            <span className="modal-eyebrow">SCHEDULE ACTIVITY</span>
+            <h3 className="modal-title">Add Activity to Day {selectedDay}</h3>
+            <p className="modal-subtitle">Pick from popular catalog items or enter custom details.</p>
+
+            {/* Catalog presets */}
+            <div style={{ marginBottom: '1.25rem' }}>
+              <span className="form-label">Pick Popular Suggestion:</span>
+              <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingTop: '0.5rem' }}>
+                {activitiesData.slice(0, 4).map((act) => (
+                  <button
+                    key={act.id}
+                    type="button"
+                    onClick={() => handlePickPresetActivity(act.title, act.category, act.price)}
+                    className="btn-outline-cta"
+                    style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem', whiteSpace: 'nowrap' }}
+                  >
+                    + {act.title} (₹{act.price})
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <form onSubmit={handleAddActivitySubmit} className="modal-form">
+              <div className="modal-field-group">
+                <label className="modal-label">Activity Title *</label>
+                <input
+                  type="text"
                   required
+                  value={actTitle}
+                  onChange={(e) => setActTitle(e.target.value)}
+                  className="modal-input-control"
+                  placeholder="e.g. Louvre Museum Guided Tour"
                 />
               </div>
 
-              {/* Category & Budget */}
-              <div className="modal-two-col">
-                <div className="modal-field">
-                  <label>Section Category</label>
-                  <select 
-                    value={formCategory}
-                    onChange={(e) => setFormCategory(e.target.value as ItinerarySection['category'])}
+              <div className="modal-fields-row">
+                <div className="modal-field-group">
+                  <label className="modal-label">Time Slot</label>
+                  <input
+                    type="time"
+                    value={actTime}
+                    onChange={(e) => setActTime(e.target.value)}
+                    className="modal-input-control"
+                  />
+                </div>
+
+                <div className="modal-field-group">
+                  <label className="modal-label">Duration (Hours)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={actDuration}
+                    onChange={(e) => setActDuration(Number(e.target.value))}
+                    className="modal-input-control"
+                  />
+                </div>
+              </div>
+
+              <div className="modal-fields-row">
+                <div className="modal-field-group">
+                  <label className="modal-label">Estimated Cost (INR)</label>
+                  <input
+                    type="number"
+                    value={actCost}
+                    onChange={(e) => setActCost(Number(e.target.value))}
+                    className="modal-input-control"
+                  />
+                </div>
+
+                <div className="modal-field-group">
+                  <label className="modal-label">Category</label>
+                  <select
+                    value={actCategory}
+                    onChange={(e) => setActCategory(e.target.value)}
+                    className="modal-select-control"
                   >
-                    <option value="Activity">Activity / Tour</option>
-                    <option value="Sightseeing">Sightseeing</option>
-                    <option value="Travel">Travel / Flight / Transfer</option>
-                    <option value="Hotel">Hotel / Accommodation</option>
-                    <option value="Dining">Dining / Food Experience</option>
-                    <option value="Relaxation">Relaxation / Beach</option>
+                    <option value="Activities">Activities</option>
+                    <option value="Food & Dining">Food & Dining</option>
+                    <option value="Culture & History">Culture & History</option>
+                    <option value="Beach & Water">Beach & Water</option>
+                    <option value="Transport">Transport</option>
                   </select>
                 </div>
-
-                <div className="modal-field">
-                  <label>Budget for this Section ({tripData.currency})</label>
-                  <input 
-                    type="number" 
-                    value={formBudget} 
-                    onChange={(e) => setFormBudget(Number(e.target.value))}
-                    min={0}
-                    step={500}
-                    required
-                  />
-                </div>
               </div>
 
-              {/* Dates */}
-              <div className="modal-two-col">
-                <div className="modal-field">
-                  <label>Start Date</label>
-                  <input 
-                    type="date" 
-                    value={formStartDate} 
-                    onChange={(e) => setFormStartDate(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="modal-field">
-                  <label>End Date</label>
-                  <input 
-                    type="date" 
-                    value={formEndDate} 
-                    onChange={(e) => setFormEndDate(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Description */}
-              <div className="modal-field">
-                <label>Section Information / Description</label>
-                <textarea 
-                  rows={3}
-                  value={formDescription}
-                  onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="All the necessary information about this section. This can be anything like travel section, hotel or any other activity."
-                  required
+              <div className="modal-field-group">
+                <label className="modal-label">Notes</label>
+                <input
+                  type="text"
+                  value={actNotes}
+                  onChange={(e) => setActNotes(e.target.value)}
+                  className="modal-input-control"
+                  placeholder="Meeting point, ticket codes, or travel tips"
                 />
               </div>
 
-              {/* Location & Activities */}
-              <div className="modal-two-col">
-                <div className="modal-field">
-                  <label>Location / Destination</label>
-                  <input 
-                    type="text"
-                    value={formLocation}
-                    onChange={(e) => setFormLocation(e.target.value)}
-                    placeholder="e.g. Oia, Santorini"
-                  />
-                </div>
-
-                <div className="modal-field">
-                  <label>Key Activities (comma separated)</label>
-                  <input 
-                    type="text"
-                    value={formActivities}
-                    onChange={(e) => setFormActivities(e.target.value)}
-                    placeholder="e.g. Wine tour, Sunset viewing"
-                  />
-                </div>
-              </div>
-
-              {/* Modal Actions */}
-              <div className="modal-footer-row">
-                <button 
-                  type="button" 
-                  className="btn-modal-cancel"
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className="btn-modal-save"
-                >
-                  <span>{editingSectionId ? 'Update Section' : 'Add to Itinerary'}</span>
-                </button>
-              </div>
+              <button type="submit" className="btn-modal-submit">
+                <Plus size={18} /> Schedule Activity
+              </button>
             </form>
           </div>
         </div>
       )}
-
-      {/* Footer */}
-      <footer className="footer-bar">
-        <div className="footer-inner">
-          <div className="footer-brand">
-            <div className="footer-logo">
-              <span className="sunset-text">🌅</span>
-              <span>GlobeTrotter Itinerary Builder</span>
-            </div>
-            <p className="footer-tagline">"Plan. Explore. Experience More."</p>
-          </div>
-          <div className="footer-copyright">
-            © 2026 GlobeTrotter • Sunset Journey Edition
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };
-
-export default BuildItinerary;

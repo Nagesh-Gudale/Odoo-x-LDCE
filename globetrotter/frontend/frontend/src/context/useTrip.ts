@@ -8,3 +8,5 @@ export const useTrip = () => {
   }
   return context;
 };
+
+export const useTripContext = useTrip;

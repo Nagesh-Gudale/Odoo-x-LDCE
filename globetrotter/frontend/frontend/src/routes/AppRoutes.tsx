@@ -9,18 +9,24 @@ import { ProtectedRoute } from '../components/auth/ProtectedRoute';
 import { Trips } from '../pages/Trips';
 import { CreateTrip } from '../pages/CreateTrip';
 import { TripDetails } from '../pages/TripDetails';
+import { BuildItinerary } from '../pages/BuildItinerary';
+import { TripBudget } from '../pages/TripBudget';
 import { Profile } from '../pages/Profile';
 import { Community } from '../pages/Community';
-import { Calendar } from '../pages/Calendar';
-import { AdminDashboard } from '../pages/AdminDashboard';
-import { AdminUsers } from '../pages/AdminUsers';
+import { CalendarPage } from '../pages/CalendarPage';
 import { Activities } from '../pages/Activities';
 import { ActivityDetails } from '../pages/ActivityDetails';
-import { 
-  ExploreCitiesPlaceholder, 
-  TripBuilderPlaceholder,
-  AboutPlaceholder 
-} from '../pages/Placeholders';
+
+// Admin Imports
+import { AdminLayout } from '../pages/admin/AdminLayout';
+import { AdminDashboard } from '../pages/admin/AdminDashboard';
+import { AdminUsers } from '../pages/admin/AdminUsers';
+import { AdminTrips } from '../pages/admin/AdminTrips';
+import { AdminActivities } from '../pages/admin/AdminActivities';
+import { AdminDestinations } from '../pages/admin/AdminDestinations';
+import { AdminAnalytics } from '../pages/admin/AdminAnalytics';
+
+import { ExploreCitiesPlaceholder, AboutPlaceholder } from '../pages/Placeholders';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -35,11 +41,14 @@ export const AppRoutes: React.FC = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
 
-      {/* Public Trips & Activities Discovery */}
+      {/* Public Trips, Activities, and Community Discovery */}
       <Route path="/trips" element={<Trips />} />
       <Route path="/activities" element={<Activities />} />
       <Route path="/activities/:id" element={<ActivityDetails />} />
       <Route path="/search/activities" element={<Activities />} />
+      <Route path="/community" element={<Community />} />
+      <Route path="/search/cities" element={<ExploreCitiesPlaceholder />} />
+      <Route path="/about" element={<AboutPlaceholder />} />
 
       {/* Protected User Action Routes */}
       <Route 
@@ -59,6 +68,22 @@ export const AppRoutes: React.FC = () => {
         } 
       />
       <Route 
+        path="/trips/:id/itinerary" 
+        element={
+          <ProtectedRoute>
+            <BuildItinerary />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/trips/:id/budget" 
+        element={
+          <ProtectedRoute>
+            <TripBudget />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
         path="/profile" 
         element={
           <ProtectedRoute>
@@ -70,36 +95,27 @@ export const AppRoutes: React.FC = () => {
         path="/calendar" 
         element={
           <ProtectedRoute>
-            <Calendar />
+            <CalendarPage />
           </ProtectedRoute>
         } 
       />
 
-      {/* Explore & Planner Public Placeholders */}
-      <Route path="/search/cities" element={<ExploreCitiesPlaceholder />} />
-      <Route path="/trips/build" element={<TripBuilderPlaceholder />} />
-      
-      {/* Community & Utility Pages */}
-      <Route path="/community" element={<Community />} />
-      <Route path="/about" element={<AboutPlaceholder />} />
-      
-      {/* Admin Panel Console */}
+      {/* Protected Admin Portal Console */}
       <Route 
-        path="/admin/dashboard" 
+        path="/admin" 
         element={
-          <ProtectedRoute>
-            <AdminDashboard />
+          <ProtectedRoute requireAdmin={true}>
+            <AdminLayout />
           </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/admin/users" 
-        element={
-          <ProtectedRoute>
-            <AdminUsers />
-          </ProtectedRoute>
-        } 
-      />
+        }
+      >
+        <Route index element={<AdminDashboard />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="trips" element={<AdminTrips />} />
+        <Route path="activities" element={<AdminActivities />} />
+        <Route path="destinations" element={<AdminDestinations />} />
+        <Route path="analytics" element={<AdminAnalytics />} />
+      </Route>
 
       {/* Fallback to Home */}
       <Route path="*" element={<Navigate to="/home" replace />} />
