@@ -1,0 +1,198 @@
+.admin-page {
+  padding: 4rem 1.5rem;
+  text-align: left;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.title-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.admin-icon-top {
+  color: var(--color-sunset-orange);
+  width: 28px;
+  height: 28px;
+}
+
+.admin-header h2 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--color-primary-dark);
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 1rem;
+}
+
+.admin-tab {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.admin-tab:hover {
+  background-color: #fafafa;
+}
+
+.admin-tab.active {
+  background-color: var(--color-primary-dark);
+  color: #ffffff;
+}
+
+.admin-section-header {
+  margin-bottom: 2.5rem;
+}
+
+.admin-section-header h3 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+.admin-section-header p {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  margin-top: 0.15rem;
+}
+
+/* Metrics Dashboard */
+.admin-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.5rem;
+}
+
+/* Recent Operations */
+.activity-card h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.operations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.operation-item {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 1rem;
+}
+
+.operation-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.op-time {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  white-space: nowrap;
+  width: 90px;
+}
+
+/* Users Table */
+.users-table-card {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 1rem 1.5rem;
+  font-size: 0.9rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-table th {
+  background-color: #fafafa;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.user-name-cell {
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+.actions-cell {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.btn-action-edit,
+.btn-action-delete {
+  padding: 0.4rem;
+  border-radius: 6px;
+  color: var(--color-text-secondary);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-action-edit:hover {
+  background-color: #f3f4f6;
+  color: var(--color-primary);
+}
+
+.btn-action-delete:hover {
+  background-color: #fee2e2;
+  color: var(--color-error);
+}
+
+@media (max-width: 1024px) {
+  .admin-metrics-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+  .admin-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
