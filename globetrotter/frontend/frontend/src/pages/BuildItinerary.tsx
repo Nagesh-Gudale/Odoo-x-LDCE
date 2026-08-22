@@ -153,7 +153,7 @@ export const BuildItinerary: React.FC = () => {
 
   return (
     <div className="build-itinerary-page">
-      <Navbar activeScreen="itinerary" />
+      <Navbar />
 
       {/* Screen Identifier Bar */}
       <div className="screen-badge-bar">
