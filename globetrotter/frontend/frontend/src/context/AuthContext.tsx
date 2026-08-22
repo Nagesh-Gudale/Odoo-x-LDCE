@@ -78,21 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-<<<<<<< Updated upstream
-        const savedUserLocal = localStorage.getItem('currentUser');
-        const savedUserSession = sessionStorage.getItem('currentUser');
-        
-        if (savedUserLocal) {
-          const parsed = JSON.parse(savedUserLocal);
-          setUser({ ...parsed, role: parsed.role || 'admin' });
-          setIsAuthenticated(true);
-        } else if (savedUserSession) {
-          const parsed = JSON.parse(savedUserSession);
-          setUser({ ...parsed, role: parsed.role || 'admin' });
-          setIsAuthenticated(true);
-        } else {
-          setUser(DEFAULT_ADMIN_USER);
-=======
+
         const savedToken = readStorageValue(TOKEN_KEY);
         const savedUserLocal = localStorage.getItem(USER_KEY);
         const savedUserSession = sessionStorage.getItem(USER_KEY);
@@ -100,17 +86,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (savedToken) {
           const parsed = JSON.parse(savedUserLocal ?? savedUserSession ?? 'null');
           setUser(parsed);
->>>>>>> Stashed changes
+
           setIsAuthenticated(true);
         }
       } catch (err) {
         console.error('Failed to parse saved user credentials', err);
-<<<<<<< Updated upstream
-        setUser(DEFAULT_ADMIN_USER);
-        setIsAuthenticated(true);
-=======
+
         clearStoredAuth();
->>>>>>> Stashed changes
+
       } finally {
         setIsLoading(false);
       }
@@ -121,14 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = useCallback(async (email: string, password: string, rememberMe: boolean) => {
     setIsLoading(true);
-<<<<<<< Updated upstream
-    await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // Validate password exists
-    if (!password || password.length === 0) {
-      setIsLoading(false);
-      throw new Error('Please enter a password.');
-=======
 
     try {
       const result = await apiRequest<LoginResponse>('/api/auth/login', {
@@ -150,7 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error(message);
     } finally {
       setIsLoading(false);
->>>>>>> Stashed changes
+
     }
 
     const role = email.toLowerCase().includes('admin') ? 'admin' : 'user';
@@ -174,21 +150,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = useCallback(async (name: string, email: string, password: string) => {
     setIsLoading(true);
-<<<<<<< Updated upstream
-    await new Promise((resolve) => setTimeout(resolve, 500));
 
-    if (email.includes('@') && password.length >= 6) {
-      const mockUser: User = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: name,
-        email: email,
-        role: 'user',
-      };
-      
-      setUser(mockUser);
-      setIsAuthenticated(true);
-      sessionStorage.setItem('currentUser', JSON.stringify(mockUser));
-=======
 
     try {
       await apiRequest<SignupResponse>('/api/auth/signup', {
@@ -248,7 +210,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const message = err instanceof Error ? err.message : 'Login verification failed. Please try again.';
       throw new Error(message);
     } finally {
->>>>>>> Stashed changes
+
       setIsLoading(false);
     }
   }, []);
@@ -271,15 +233,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = useCallback(async () => {
     setIsLoading(true);
-<<<<<<< Updated upstream
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('currentUser');
-    sessionStorage.removeItem('currentUser');
-    setIsLoading(false);
-=======
+
 
     try {
       clearStoredAuth();
@@ -288,17 +242,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
->>>>>>> Stashed changes
+
   }, []);
 
   const forgotPassword = useCallback(async (email: string) => {
     setIsLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 400));
     setIsLoading(false);
-<<<<<<< Updated upstream
-=======
 
->>>>>>> Stashed changes
     if (!email.includes('@')) {
       throw new Error('Please enter a valid email address.');
     }
