@@ -232,7 +232,7 @@ export const TripDetails: React.FC = () => {
               <div className="metric-row border-top">
                 <span>Remaining</span>
                 <strong className="color-primary">
-                  {parseInt(currentTrip.progress) <= 100 ? 'Within Budget' : 'Over Budget'}
+                  {currentTrip.progress <= 100 ? 'Within Budget' : 'Over Budget'}
                 </strong>
               </div>
             </div>
