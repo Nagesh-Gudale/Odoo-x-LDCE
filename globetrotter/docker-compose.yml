@@ -1,0 +1,48 @@
+# GlobeTrotter — local dev infra (hackathon MVP)
+# Usage:
+#   cp .env.example .env       # then edit if you want
+#   docker compose up -d db
+#   docker compose exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+#     < db/schema.sql
+
+services:
+  db:
+    image: postgres:16-alpine          # pinned: latest 16.x LTS line, alpine for size
+    container_name: globetrotter-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB:       ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - globetrotter_pgdata:/var/lib/postgresql/data
+      # One-shot schema bootstrap. Comment out after first successful bring-up
+      # to avoid re-applying DDL on every restart.
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # backend: placeholder. Uncomment + fill in once you pick a framework.
+  # ---------------------------------------------------------------------------
+  # backend:
+  #   build: ../backend          # or `image:` if using a prebuilt one
+  #   container_name: globetrotter-api
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #   environment:
+  #     DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ../backend:/app        # bind-mount source for hot-reload during hackathon
+
+volumes:
+  globetrotter_pgdata:
+    name: globetrotter_pgdata           # named volume -> survives `compose down`
