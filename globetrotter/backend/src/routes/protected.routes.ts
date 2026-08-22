@@ -16,8 +16,8 @@ router.get("/me", requireAuth, async (req, res) => {
     res.status(401).json({ error: "no user on request" });
     return;
   }
-  const result = await pool.query<{ user_id: number; email: string; full_name: string | null }>(
-    `SELECT user_id, email, full_name FROM users WHERE user_id = $1`,
+  const result = await pool.query<{ user_id: number; email: string; full_name: string | null; role: "user" | "admin" }>(
+    `SELECT user_id, email, full_name, role FROM users WHERE user_id = $1`,
     [userId],
   );
   const row = result.rows[0];

@@ -1,10 +1,13 @@
 -- =============================================================================
--- GlobeTrotter — seed/dummy data (live schema verified from Postgres)
--- This script matches the current live database shape:
---   - users uses full_name, not display_name
---   - users has is_active, not email_verified
---   - there is no otp_codes table in the live DB, so no rows are inserted there
---   - all seeded users are active and ready for immediate login in the app
+-- GlobeTrotter — seed/dummy data (dev only)
+--
+-- This script is idempotent: it TRUNCATEs every data table inside a transaction
+-- at the top, then re-inserts the known-good demo state. Safe to re-run against
+-- an already-seeded database. Do NOT run in production.
+--
+-- Seeded users share a single dev password: "password123".
+-- The bcrypt hash below was generated with cost 10 (matches BCRYPT_ROUNDS default).
+-- It verifies as bcrypt.compareSync('password123', hash) === true.
 --
 -- Dependency order is preserved exactly:
 -- countries → cities → categories → users → user_preferences → trips →
@@ -13,6 +16,26 @@
 -- =============================================================================
 
 BEGIN;
+
+-- Wipe data in FK-safe order. CASCADE handles dependents; the user/dependent
+-- split mirrors the FK direction so this stays fast on a re-run.
+TRUNCATE TABLE
+    itinerary_items,
+    trip_days,
+    trip_stops,
+    trip_shares,
+    trips,
+    saved_cities,
+    expenses,
+    activities,
+    cities,
+    categories,
+    countries,
+    user_preferences,
+    password_reset,
+    otp_codes,
+    users
+RESTART IDENTITY CASCADE;
 
 -- ----- countries ------------------------------------------------------------
 INSERT INTO countries (name, iso_code) VALUES
@@ -56,13 +79,15 @@ INSERT INTO categories (name, type) VALUES
     ('Misc',        'expense');
 
 -- ----- users ----------------------------------------------------------------
--- The live schema has no email_verified column; all seeded users are active via is_active=true.
-INSERT INTO users (email, full_name, password_hash, profile_image_url, public_slug, is_active) VALUES
-    ('yasha@example.com',  'Yasha Patel',    '!seed!', NULL, 'yasha-patel', true),
-    ('mira@example.com',   'Mira Chen',      '!seed!', NULL, 'mira-chen',  true),
-    ('leo@example.com',    'Leo Rossi',      '!seed!', NULL, 'leo-rossi',  true),
-    ('sana@example.com',   'Sana Iqbal',     '!seed!', NULL, 'sana-iqbal', true),
-    ('kenji@example.com',  'Kenji Watanabe', '!seed!', NULL, 'kenji-watanabe', true);
+-- All seeded users share password "password123" (bcrypt cost 10).
+-- email_verified=true so the demo logins skip the email-OTP gate during demos.
+-- role='admin' is given to yasha so the seeded admin account exists for testing.
+INSERT INTO users (email, full_name, password_hash, profile_image_url, public_slug, is_active, email_verified, role) VALUES
+    ('yasha@example.com',  'Yasha Patel',    '$2b$10$29IZnFay7SnGvNHJPRnU6eyObXZrJnpYTX6EyUdlJfMnTYDybKR72', NULL, 'yasha-patel',    true, true, 'admin'),
+    ('mira@example.com',   'Mira Chen',      '$2b$10$29IZnFay7SnGvNHJPRnU6eyObXZrJnpYTX6EyUdlJfMnTYDybKR72', NULL, 'mira-chen',      true, true, 'user'),
+    ('leo@example.com',    'Leo Rossi',      '$2b$10$29IZnFay7SnGvNHJPRnU6eyObXZrJnpYTX6EyUdlJfMnTYDybKR72', NULL, 'leo-rossi',      true, true, 'user'),
+    ('sana@example.com',   'Sana Iqbal',     '$2b$10$29IZnFay7SnGvNHJPRnU6eyObXZrJnpYTX6EyUdlJfMnTYDybKR72', NULL, 'sana-iqbal',     true, true, 'user'),
+    ('kenji@example.com',  'Kenji Watanabe', '$2b$10$29IZnFay7SnGvNHJPRnU6eyObXZrJnpYTX6EyUdlJfMnTYDybKR72', NULL, 'kenji-watanabe', true, true, 'user');
 
 -- ----- user_preferences -----------------------------------------------------
 INSERT INTO user_preferences (user_id, theme, default_currency, default_trip_visibility, notification_opt_in) VALUES

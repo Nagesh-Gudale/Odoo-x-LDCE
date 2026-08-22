@@ -5,6 +5,7 @@ export declare const env: {
     readonly JWT_EXPIRES_IN: number;
     readonly BCRYPT_ROUNDS: number;
     readonly FRONTEND_ORIGIN: string;
+    readonly PORT: number;
     readonly GMAIL_USER: string;
     readonly GMAIL_APP_PASSWORD: string;
     readonly OTP_TTL_MINUTES: number;

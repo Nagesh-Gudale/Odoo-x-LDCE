@@ -37,6 +37,7 @@ export const Navbar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const isAdmin = user?.role === 'admin';
   const navLinks = [
     { name: 'Home', path: '/home' },
     { name: 'Explore', path: '/explore' },
@@ -44,7 +45,7 @@ export const Navbar: React.FC = () => {
     { name: 'Trips', path: '/trips' },
     { name: 'Community', path: '/community' },
     { name: 'Calendar', path: '/calendar' },
-    { name: 'Admin', path: '/admin' },
+    ...(isAdmin ? [{ name: 'Admin', path: '/admin' }] : []),
   ];
 
   return (

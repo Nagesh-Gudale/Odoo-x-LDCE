@@ -13,7 +13,7 @@ router.get("/me", requireAuth, async (req, res) => {
         res.status(401).json({ error: "no user on request" });
         return;
     }
-    const result = await pool.query(`SELECT user_id, email, full_name FROM users WHERE user_id = $1`, [userId]);
+    const result = await pool.query(`SELECT user_id, email, full_name, role FROM users WHERE user_id = $1`, [userId]);
     const row = result.rows[0];
     if (!row) {
         res.status(404).json({ error: "user not found" });

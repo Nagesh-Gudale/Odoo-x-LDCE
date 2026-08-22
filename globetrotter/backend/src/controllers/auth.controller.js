@@ -19,6 +19,7 @@ function publicUser(row) {
         profile_image_url: row.profile_image_url,
         public_slug: row.public_slug,
         is_active: row.is_active,
+        role: row.role,
         created_at: row.created_at,
     };
 }
@@ -64,34 +65,34 @@ async function validateOtpForUser(userId, purpose, enteredOtp) {
         return false;
     const now = new Date();
     const nextAttemptCount = Number(row.attempt_count) + 1;
-    if (row.expires_at <= now) {
-        await pool.query(`UPDATE otp_codes
-          SET used_at = NOW(),
-              attempt_count = $1
-        WHERE otp_id = $2`, [nextAttemptCount, row.otp_id]);
-        return false;
+    const isExpired = row.expires_at <= now;
+    if (!isExpired) {
+        const expectedHash = Buffer.from(row.otp_hash, "hex");
+        const actualHash = Buffer.from(hashOtpCode(enteredOtp), "hex");
+        if (expectedHash.length === actualHash.length && crypto.timingSafeEqual(expectedHash, actualHash)) {
+            // Correct code: burn the row regardless of attempt count, mark consumed.
+            await pool.query(`UPDATE otp_codes
+            SET used_at = NOW(),
+                attempt_count = $1
+          WHERE otp_id = $2`, [nextAttemptCount, row.otp_id]);
+            return true;
+        }
     }
-    if (nextAttemptCount > env.OTP_MAX_ATTEMPTS) {
-        await pool.query(`UPDATE otp_codes
-          SET used_at = NOW(),
-              attempt_count = $1
-        WHERE otp_id = $2`, [nextAttemptCount, row.otp_id]);
-        return false;
-    }
-    const expectedHash = Buffer.from(row.otp_hash, "hex");
-    const actualHash = Buffer.from(hashOtpCode(enteredOtp), "hex");
-    if (expectedHash.length !== actualHash.length || !crypto.timingSafeEqual(expectedHash, actualHash)) {
-        await pool.query(`UPDATE otp_codes
-          SET attempt_count = $1,
-              used_at = CASE WHEN $1 >= $2 THEN NOW() ELSE used_at END
-        WHERE otp_id = $3`, [nextAttemptCount, env.OTP_MAX_ATTEMPTS, row.otp_id]);
-        return false;
-    }
+    // Either the code was wrong, or the row was already expired. Either way:
+    //   * bump attempt_count,
+    //   * burn the row ONLY when the post-bump count strictly exceeds the cap
+    //     (i.e. the failing attempt was the one that put it over the edge).
+    //     Burning on equality would lock the user out one attempt earlier than
+    //     the documented cap.
     await pool.query(`UPDATE otp_codes
-        SET used_at = NOW(),
-            attempt_count = $1
-      WHERE otp_id = $2`, [nextAttemptCount, row.otp_id]);
-    return true;
+        SET attempt_count = $1,
+            used_at = CASE
+                WHEN $1 > $2 THEN NOW()
+                WHEN $3 THEN NOW()
+                ELSE used_at
+            END
+      WHERE otp_id = $4`, [nextAttemptCount, env.OTP_MAX_ATTEMPTS, isExpired, row.otp_id]);
+    return false;
 }
 // --- signup -----------------------------------------------------------------
 export async function signup(req, res) {
@@ -109,7 +110,7 @@ export async function signup(req, res) {
         const result = await pool.query(`INSERT INTO users (email, full_name, password_hash, email_verified)
        VALUES ($1, NULLIF($2, ''), $3, false)
        RETURNING user_id, email, full_name, profile_image_url,
-                 public_slug, is_active, created_at`, [email, full_name, password_hash]);
+                 public_slug, is_active, role, created_at`, [email, full_name, password_hash]);
         const user = result.rows[0];
         if (!user)
             return badRequest(res, "could not create user");
@@ -143,8 +144,13 @@ export async function verifySignup(req, res) {
       WHERE email = $1
       LIMIT 1`, [email]);
     const user = userResult.rows[0];
-    if (!user || user.email_verified) {
+    if (!user) {
         genericOtpError(res);
+        return;
+    }
+    if (user.email_verified) {
+        // Don't leak "wrong code" — the real story is "nothing to verify".
+        res.status(409).json({ error: "email already verified" });
         return;
     }
     const ok = await validateOtpForUser(user.user_id, "signup_verify", otp);
@@ -165,7 +171,7 @@ export async function login(req, res) {
     if (!email || !password)
         return badRequest(res, "email and password required");
     const result = await pool.query(`SELECT user_id, email, full_name, profile_image_url, public_slug,
-            is_active, email_verified, created_at, password_hash
+            is_active, email_verified, role, created_at, password_hash
        FROM users
       WHERE email = $1
       LIMIT 1`, [email]);
@@ -217,7 +223,7 @@ export async function verifyLoginOtp(req, res) {
         return;
     }
     const userResult = await pool.query(`SELECT user_id, email, full_name, profile_image_url, public_slug,
-            is_active, created_at
+            is_active, role, created_at
        FROM users
       WHERE user_id = $1
       LIMIT 1`, [payload.user_id]);
@@ -231,7 +237,7 @@ export async function verifyLoginOtp(req, res) {
         genericOtpError(res);
         return;
     }
-    const token = signAccessToken({ user_id: user.user_id });
+    const token = signAccessToken({ user_id: user.user_id, role: user.role });
     res.status(200).json({ user: publicUser(user), token });
 }
 export async function resendOtp(req, res) {
@@ -256,6 +262,17 @@ export async function resendOtp(req, res) {
         res.status(400).json({ error: "invalid or expired otp" });
         return;
     }
+    // A login MFA code is only useful after the user has verified their email.
+    // Without this gate, an attacker who knows a target's password can keep
+    // spamming login_mfa OTPs to noise up their inbox.
+    if (purpose === "login_mfa" && !user.email_verified) {
+        res.status(403).json({ error: "please verify your email first" });
+        return;
+    }
+    // Invalidate any un-consumed prior OTP for this (user, purpose) BEFORE the
+    // cooldown check so a phished prior code can never be reused while the user
+    // waits for the cooldown window to elapse.
+    await invalidateUnusedOtps(user.user_id, purpose);
     const recentResult = await pool.query(`SELECT created_at
        FROM otp_codes
       WHERE user_id = $1
@@ -271,7 +288,6 @@ export async function resendOtp(req, res) {
             return;
         }
     }
-    await invalidateUnusedOtps(user.user_id, purpose);
     await issueOtpForUser(user.user_id, user.email, purpose);
     res.status(200).json({ message: "verification code sent" });
 }
