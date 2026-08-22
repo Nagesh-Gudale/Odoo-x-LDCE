@@ -1,1 +1,13 @@
 .env
+
+globetrotter/backend/node_modules
+
+globetrotter/backend/.env
+globetrotter/frontend/node_modules
+globetrotter/frontend/.env
+globetrotter/frontend/dist
+globetrotter/frontend/build
+globetrotter/frontend/.next
+globetrotter/frontend/.cache
+globetrotter/frontend/.nuxt
+globetrotter/frontend/.output
