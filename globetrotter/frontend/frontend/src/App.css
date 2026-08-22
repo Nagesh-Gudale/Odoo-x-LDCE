@@ -1,7 +1,16 @@
+<<<<<<< Updated upstream
 /* App-specific local styles (global styles are loaded from global.css) */
 
 main {
   min-height: calc(100vh - 72px - 340px);
+=======
+main {
+  min-height: calc(100vh - 72px - 340px); /* Height minus navbar and footer approximate sizes */
+}
+/* App Container Styles */
+.app-root {
+  min-height: 100vh;
+>>>>>>> Stashed changes
   display: flex;
   flex-direction: column;
 }
