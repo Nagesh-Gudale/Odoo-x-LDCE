@@ -1,0 +1,68 @@
+.gt-logo-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  user-select: none;
+  cursor: pointer;
+}
+
+.gt-logo-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.gt-logo-container:hover .gt-logo-icon-box {
+  transform: scale(1.08) rotate(-3deg);
+}
+
+.gt-logo-svg {
+  filter: drop-shadow(0 4px 12px rgba(255, 79, 154, 0.25));
+}
+
+.gt-logo-text-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.gt-brand-title {
+  font-family: var(--font-heading, 'Plus Jakarta Sans', sans-serif);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.size-sm .gt-brand-title { font-size: 1.15rem; }
+.size-md .gt-brand-title { font-size: 1.4rem; }
+.size-lg .gt-brand-title { font-size: 1.8rem; }
+.size-xl .gt-brand-title { font-size: 2.4rem; }
+
+.part-globe {
+  color: var(--text-primary, #0F172A);
+}
+
+body.dark-theme .part-globe {
+  color: #FFFFFF;
+}
+
+.part-trotter {
+  background: linear-gradient(135deg, #FF7A45 0%, #FF4F9A 60%, #8B5CF6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gt-brand-tagline {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-secondary, #64748B);
+  letter-spacing: -0.01em;
+  margin-top: 0.15rem;
+}
+
+.size-sm .gt-brand-tagline { font-size: 0.65rem; }
+.size-lg .gt-brand-tagline { font-size: 0.82rem; }
+.size-xl .gt-brand-tagline { font-size: 0.95rem; }
