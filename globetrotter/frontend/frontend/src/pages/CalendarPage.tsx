@@ -133,13 +133,21 @@ export const CalendarPage: React.FC = () => {
         <div className="itinerary-header-card" style={{ padding: '1.25rem 2rem', marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', fontWeight: 800 }}>
-                {MONTH_NAMES[currentMonthIndex]} {currentYear}
-              </h2>
+              <select
+                value={currentMonthIndex}
+                onChange={(e) => setCurrentMonthIndex(Number(e.target.value))}
+                className="form-select-control"
+                style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', fontWeight: 800, padding: '0.35rem 0.85rem' }}
+              >
+                {MONTH_NAMES.map((name, idx) => (
+                  <option key={name} value={idx}>{name} {currentYear}</option>
+                ))}
+              </select>
+
               <div style={{ display: 'flex', gap: '0.4rem' }}>
                 <button onClick={handlePrevMonth} className="btn-outline-cta" style={{ padding: '0.4rem 0.6rem' }}><ChevronLeft size={16} /></button>
                 <button onClick={handleNextMonth} className="btn-outline-cta" style={{ padding: '0.4rem 0.6rem' }}><ChevronRight size={16} /></button>
-                <button onClick={handleToday} className="btn-outline-cta" style={{ padding: '0.4rem 0.85rem', fontSize: '0.82rem' }}>Today</button>
+                <button onClick={handleToday} className="btn-outline-cta" style={{ padding: '0.4rem 0.85rem', fontSize: '0.82rem' }}>Sept 2026</button>
               </div>
             </div>
 
@@ -201,7 +209,7 @@ export const CalendarPage: React.FC = () => {
         {currentView === 'Agenda' && (
           <div className="expenses-table-card shadow-subtle">
             <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.5rem' }}>
-              Upcoming Agenda Events ({calendarEvents.length})
+              All Travel Agenda Events ({calendarEvents.length})
             </h3>
 
             {calendarEvents.length === 0 ? (
