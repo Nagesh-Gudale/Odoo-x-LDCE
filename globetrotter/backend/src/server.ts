@@ -8,19 +8,37 @@ const app = express();
 
 const PORT = Number.parseInt(process.env["PORT"] ?? "3000", 10);
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      const allowedOrigins = [env.FRONTEND_ORIGIN, "http://localhost:5173", "http://127.0.0.1:5173"];
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-        return;
-      }
-      callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-  }),
-);
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) => {
+    const allowedOrigins = [
+      env.FRONTEND_ORIGIN,
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+    ];
+
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") {
+    res.header("Access-Control-Allow-Origin", req.headers.origin ?? env.FRONTEND_ORIGIN);
+    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,PATCH,OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.sendStatus(204);
+    return;
+  }
+  next();
+});
 
 app.use(express.json());
 

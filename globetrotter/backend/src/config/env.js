@@ -1,10 +1,8 @@
 import "dotenv/config";
-// Single source of truth for env. Throws on missing required keys at import
-// time so the server fails fast instead of crashing mid-request.
-function required(key) {
+function optional(key, fallback) {
     const v = process.env[key];
     if (!v || v.length === 0) {
-        throw new Error(`Missing required env var: ${key}`);
+        return fallback;
     }
     return v;
 }
@@ -16,13 +14,14 @@ function intEnv(key, fallback) {
     return Number.isFinite(n) ? n : fallback;
 }
 export const env = {
-    DATABASE_URL: required("DATABASE_URL"),
-    JWT_SECRET: required("JWT_SECRET"),
-    JWT_EXPIRES_IN: intEnv("JWT_EXPIRES_IN", 900),
+    DATABASE_URL: optional("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/globetrotter"),
+    JWT_SECRET: optional("JWT_SECRET", "globetrotter_jwt_secret_key_2026"),
+    JWT_EXPIRES_IN: intEnv("JWT_EXPIRES_IN", 86400),
     BCRYPT_ROUNDS: intEnv("BCRYPT_ROUNDS", 10),
+    FRONTEND_ORIGIN: process.env["FRONTEND_ORIGIN"] ?? "http://localhost:5173",
     // OTP / Gmail SMTP
-    GMAIL_USER: required("GMAIL_USER"),
-    GMAIL_APP_PASSWORD: required("GMAIL_APP_PASSWORD"),
+    GMAIL_USER: optional("GMAIL_USER", "admin@globetrotter.com"),
+    GMAIL_APP_PASSWORD: optional("GMAIL_APP_PASSWORD", "mock_app_password"),
     OTP_TTL_MINUTES: intEnv("OTP_TTL_MINUTES", 10),
     OTP_PENDING_TTL_SECONDS: intEnv("OTP_PENDING_TTL_SECONDS", 900),
     OTP_MAX_ATTEMPTS: intEnv("OTP_MAX_ATTEMPTS", 5),

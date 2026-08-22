@@ -12,15 +12,14 @@ function AppContent() {
   const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-signup', '/verify-login-otp'];
 
   const isAuthPage = authRoutes.includes(location.pathname);
-  const isAdminPage = location.pathname.startsWith('/admin');
 
   return (
     <>
-      {!isAuthPage && !isAdminPage && <Navbar />}
+      {!isAuthPage  && <Navbar />}
       <main>
         <AppRoutes />
       </main>
-      {!isAuthPage && !isAdminPage && <Footer />}
+      {!isAuthPage  && <Footer />}
     </>
   );
 }
